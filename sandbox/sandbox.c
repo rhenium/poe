@@ -1,7 +1,7 @@
 #include "sandbox.h"
 
 static void
-child(const char *root, char *cmd[])
+child(const char *root, int cmdl, char *cmd[], const char *prog)
 {
     pid_t pid = (pid_t)syscall(SYS_getpid);
     assert(pid == 1);
@@ -16,23 +16,28 @@ child(const char *root, char *cmd[])
     // if (mount(NULL, "/proc",    "proc",         MS_NOSUID | MS_NOEXEC | MS_NODEV, NULL) == -1) ERROR("mount /proc failed");
     // if (mount(NULL, "/dev",     "devtmpfs",     MS_NOSUID | MS_NOEXEC, NULL) == -1) ERROR("mount /dev failed");
     // if (mount(NULL, "/dev/shm", "tmpfs",        MS_NOSUID | MS_NODEV, NULL) == -1) ERROR("mount /dev/shm failed");
-    if (mount(NULL, "/tmp",     "tmpfs",        MS_NOSUID | MS_NODEV, NULL) == -1) ERROR("mount /tmp failed");
 
     struct passwd *pw = getpwnam(POE_USERNAME);
     if (!pw) ERROR("getpwnam() failed");
 
     if (mount(NULL, pw->pw_dir, "tmpfs", MS_NOSUID | MS_NODEV, NULL) == -1) ERROR("mount home failed");
-    if (chdir(pw->pw_dir) == -1) ERROR("chdir() failed");
+    if (chdir("/tmp") == -1) ERROR("chdir(/tmp) failed");
     if (setsid() == -1) ERROR("setsid() failed");
     if (initgroups(POE_USERNAME, pw->pw_gid) == -1) ERROR("initgroups() failed");
     if (setresgid(pw->pw_gid, pw->pw_gid, pw->pw_gid) == -1) ERROR("setresgid() failed");
     if (setresuid(pw->pw_uid, pw->pw_uid, pw->pw_uid) == -1) ERROR("setresuid() failed");
 
-    char path[] = "PATH=/usr/bin";
+    char path[] = "PATH=/opt/bin:/usr/bin";
     char *env[] = {path, NULL, NULL, NULL, NULL};
     asprintf(env + 1, "HOME=%s", pw->pw_dir);
     asprintf(env + 2, "USER=%s", POE_USERNAME);
     asprintf(env + 3, "LOGNAME=%s", POE_USERNAME);
+
+    for (int i = 0; i < cmdl; i++) {
+        if (!strcmp(cmd[i], "PROGRAM")) {
+            cmd[i] = prog;
+        }
+    }
 
     // wait parent
     if (kill(pid, SIGSTOP) == -1) ERROR("kill(self, SIGSTOP) failed");
@@ -40,7 +45,7 @@ child(const char *root, char *cmd[])
     if (prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0) == -1) ERROR("ptctl(PR_SET_NO_NEW_PRIVS, 1) failed");
     poe_init_seccomp(SCMP_ACT_TRACE(0));
 
-    if (execvpe(cmd[0], cmd, env) == -1) err(EXIT_FAILURE, "execvpe() failed");
+    if (execvpe(cmd[0], cmd, env) == -1) ERROR("execvpe() failed");
 }
 
 static inline long
@@ -151,14 +156,46 @@ parent(const pid_t mpid, int sig_fd)
     }
 }
 
+static const char *
+copy_program(const char *root, const char *progpath)
+{
+    FILE *src = fopen(progpath, "rb");
+    if (!src) ERROR("could not open src");
+
+    const char *newrel = "/tmp/prog";
+    char * fullpath = (char *)malloc(strlen(root) + strlen(newrel) + 1);
+    if (!fullpath) ERROR("failed malloc");
+    strcpy(fullpath, root);
+    strcat(fullpath, newrel);
+
+    FILE *dst = fopen(fullpath, "wb");
+    if (!dst) ERROR("could not open dst");
+
+    char buf[1024];
+    int n;
+    while ((n = fread(buf, sizeof(buf[0]), sizeof(buf), src)) > 0) {
+        if (fwrite(buf, sizeof(buf[0]), n, dst) == 0)
+            ERROR("failed fwrite");
+    }
+
+    fclose(dst);
+    fclose(src);
+
+    chmod(fullpath, 0644);
+
+    return newrel;
+}
+
 int
 main(int argc, char *argv[])
 {
-    if (argc < 4) {
-        ERROR("usage: %s baseroot envroot cmd...", program_invocation_short_name);
+    if (argc < 5) {
+        ERROR("usage: %s baseroot envroot program cmdl..", program_invocation_short_name);
     }
 
     const char *root = poe_init_playground(argv[1], argv[2]);
+
+    const char *prog = copy_program(root, argv[3]);
 
     sigset_t mask, omask;
     sigemptyset(&mask);
@@ -174,7 +211,7 @@ main(int argc, char *argv[])
     }
     if (pid == 0) {
         sigprocmask(SIG_SETMASK, &omask, NULL);
-        child(root, argv + 3);
+        child(root, argc - 4, argv + 4, prog);
     } else {
         parent(pid, sig_fd);
     }

@@ -20,6 +20,7 @@ static const struct syscall_rule syscall_rules[] = {
     // safe
     RULE(futex,         ALLOW),
     RULE(exit,          ALLOW),
+    RULE(pipe,         ALLOW),
     RULE(pipe2,         ALLOW),
     RULE(brk,           ALLOW),
     RULE(mmap,          ALLOW),
@@ -53,12 +54,14 @@ static const struct syscall_rule syscall_rules[] = {
     RULE(getcwd,        ALLOW),
     RULE(getppid,       ALLOW),
     RULE(getpgrp,       ALLOW),
+    RULE(getrandom,     ALLOW),
 
     // ????
     RULE(socket,        ERRNO(ENOSYS)),
     RULE(utimensat,        ALLOW),
     RULE(futimesat,        ALLOW),
     RULE(getxattr,      ALLOW),
+    RULE(getgroups,     ALLOW),
 
     // ???
     RULE(fadvise64, ALLOW),
@@ -79,6 +82,7 @@ static const struct syscall_rule syscall_rules[] = {
     RULE(ioctl,  ALLOW),
     RULE(lseek,  ALLOW),
     RULE(access, ALLOW),
+    RULE(faccessat, ALLOW),
 };
 static const int syscall_rules_count = sizeof(syscall_rules) / sizeof(struct syscall_rule);
 
