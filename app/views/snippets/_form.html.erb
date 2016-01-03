@@ -1,27 +1,26 @@
-<%= form_for(snippet) do |f| %>
-  <% if snippet.errors.any? %>
-    <div id="error_explanation">
-      <h2><%= pluralize(snippet.errors.count, "error") %> prohibited this snippet from being saved:</h2>
+<div class="panel panel-default">
+  <div class="panel-body">
+    <%= form_for(snippet, url: "/", html: { method: "post" }) do |f| %>
+      <% if snippet.errors.any? %>
+        <div class="alert alert-danger" role="alert">
+          <p><%= pluralize(snippet.errors.count, "error") %> prohibited this snippet from being saved:</p>
 
-      <ul>
-      <% snippet.errors.full_messages.each do |message| %>
-        <li><%= message %></li>
+          <ul>
+            <% snippet.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
       <% end %>
-      </ul>
-    </div>
-  <% end %>
 
-  <div class="field">
-    <%= f.label :title %>
-    <%= f.text_field :title %>
+      <div class="form-group">
+        <%= f.text_field :title, placeholder: "Untitled", class: "form-control" %>
+      </div>
+      <div class="form-group" id="code-field">
+        <%= f.text_area :code, style: "display: none" %>
+      </div>
+      <%= f.hidden_field :language, value: "Ruby" %>
+      <button type="submit" class="btn btn-default">Run</button>
+    <% end %>
   </div>
-
-  <div class="field">
-    <%= f.label :code %>
-    <%= f.text_area :code %>
-  </div>
-
-  <div class="actions">
-    <%= f.submit %>
-  </div>
-<% end %>
+</div>

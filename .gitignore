@@ -18,3 +18,7 @@
 
 # Vim
 .*.sw*
+
+# Playground
+playground/base
+playground/ruby

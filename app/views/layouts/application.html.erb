@@ -1,15 +1,24 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
   <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Poe</title>
     <%= csrf_meta_tags %>
-    <%= action_cable_meta_tag %>
-
-    <%= stylesheet_link_tag    "application", media: "all", "data-turbolinks-track" => true %>
-    <%= javascript_include_tag "application", "data-turbolinks-track" => true %>
+    <%= stylesheet_link_tag    "application", media: "all" %>
   </head>
 
   <body>
-    <%= yield %>
+    <nav class="navbar navbar-default navbar-static-top">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <a class="navbar-brand" href="/"><%= application_name %></a>
+        </div>
+      </div>
+    </nav>
+    <div class="container-fluid">
+      <%= yield %>
+    </div>
+    <%= javascript_include_tag "application" %>
   </body>
 </html>

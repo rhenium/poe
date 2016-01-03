@@ -1,14 +1,6 @@
-<p id="notice"><%= notice %></p>
+<%= render "form", snippet: @snippet %>
+<span style="display: none" id="snippet-id"><%= @snippet.id %></span>
 
-<p>
-  <strong>Title:</strong>
-  <%= @snippet.title %>
-</p>
-
-<p>
-  <strong>Code:</strong>
-  <%= @snippet.code %>
-</p>
-
-<%= link_to 'Edit', edit_snippet_path(@snippet) %> |
-<%= link_to 'Back', snippets_path %>
+<% @snippet.results_all.each do |result, compiler| %>
+  <%= render partial: "results/result", locals: { result: result, compiler: compiler } %>
+<% end %>

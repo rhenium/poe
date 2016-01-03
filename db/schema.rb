@@ -11,13 +11,14 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20151226120716) do
+ActiveRecord::Schema.define(version: 20160101121151) do
 
   create_table "compilers", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4" do |t|
-    t.string   "language",   limit: 64, null: false
-    t.string   "version",    limit: 64, null: false
-    t.datetime "created_at",            null: false
-    t.datetime "updated_at",            null: false
+    t.string   "language",     limit: 64, null: false
+    t.string   "version",      limit: 64, null: false
+    t.datetime "created_at",              null: false
+    t.datetime "updated_at",              null: false
+    t.string   "command_line",            null: false
     t.index ["language", "version"], name: "index_compilers_on_language_and_version", unique: true, using: :btree
   end
 
@@ -26,6 +27,8 @@ ActiveRecord::Schema.define(version: 20151226120716) do
     t.integer  "compiler_id",               null: false
     t.binary   "output",      limit: 65535, null: false
     t.datetime "created_at",                null: false
+    t.integer  "result",                    null: false
+    t.integer  "status",                    null: false
     t.index ["compiler_id"], name: "index_results_on_compiler_id", using: :btree
     t.index ["snippet_id", "compiler_id"], name: "index_results_on_snippet_id_and_compiler_id", unique: true, using: :btree
     t.index ["snippet_id"], name: "index_results_on_snippet_id", using: :btree
@@ -35,6 +38,7 @@ ActiveRecord::Schema.define(version: 20151226120716) do
     t.string   "title"
     t.binary   "code",       limit: 65535, null: false
     t.datetime "created_at",               null: false
+    t.string   "language",                 null: false
   end
 
   add_foreign_key "results", "compilers"

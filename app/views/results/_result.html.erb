@@ -1,0 +1,16 @@
+<% if result && result.finished? %>
+  <div class="result-item panel <%= result.success? ? "panel-success" : "panel-danger" %>" data-id="<%= result.id %>">
+    <div class="panel-heading"><%= compiler %></div>
+    <div class="panel-body">
+      <pre><code><%= result.formatted_output %></code></pre>
+    </div>
+  </div>
+<% else %>
+  <div class="result-item panel panel-default" data-status="<%= result ? "running" : "notran" %>" data-id="<%= result&.id %>" data-compiler-id="<%= compiler.id %>">
+    <div class="panel-heading"><%= compiler %></div>
+    <div class="panel-body">
+      <p>running....</p>
+    </div>
+  </div>
+<% end %>
+

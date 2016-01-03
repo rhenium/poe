@@ -6,11 +6,14 @@ gem "sidekiq"
 gem "sinatra", require: false
 
 gem "sprockets"
+gem "sass-rails"
 gem "uglifier", ">= 1.3.0"
 gem "sprockets-es6"
-gem "turbolinks"
+gem "jquery-rails"
+gem "bootstrap-sass"
+gem "codemirror-rails"
 
-gem "puma"
+gem "plum"
 
 group :development, :test do
   gem "byebug"
@@ -18,4 +21,5 @@ end
 
 group :development do
   gem "web-console", "~> 3.0"
+  gem "quiet_assets"
 end
