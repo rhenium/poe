@@ -25,7 +25,7 @@ class Compiler < ApplicationRecord
     sf.write(snippet.code)
     sf.fsync
     of = Tempfile.open
-    pid = spawn("/usr/bin/sudo", Rails.root.join("sandbox/sandbox").to_s, baseroot, env_overlay, sf.path, *Shellwords.split(command_line),
+    pid = spawn(Rails.root.join("sandbox/safe_runner").to_s, baseroot, env_overlay, sf.path, *Shellwords.split(command_line),
                 in: :close, # TODO
                 out: of,
                 err: STDERR)
