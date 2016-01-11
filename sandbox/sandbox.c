@@ -36,7 +36,7 @@ FINISH(enum poe_exit_reason reason, int status, const char *fmt, ...)
 }
 
 static void
-child(const char *root, int cmdl, char *cmd[], const char *prog)
+child(const char *root, char *cmd[])
 {
     pid_t pid = (pid_t)syscall(SYS_getpid);
     assert(pid == 1);
@@ -70,12 +70,6 @@ child(const char *root, int cmdl, char *cmd[], const char *prog)
         NULL
     };
     NONNEGATIVE(asprintf(env + 3, "HOME=%s", pw->pw_dir));
-
-    for (int i = 0; i < cmdl; i++) {
-        if (!strcmp(cmd[i], "PROGRAM")) {
-            cmd[i] = (char *)prog;
-        }
-    }
 
     // wait parent
     NONNEGATIVE(kill(pid, SIGSTOP));
@@ -213,6 +207,18 @@ stdout_handler(sd_event_source *es, int fd, uint32_t revents, void *vorig_fd)
     return 0;
 }
 
+static char **
+construct_cmdl(int cmdl, char *cmd[], const char *prog)
+{
+    for (int i = 0; i < cmdl; i++) {
+        if (!strcmp(cmd[i], "PROGRAM")) {
+            cmd[i] = (char *)prog;
+        }
+    }
+
+    return cmd;
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -222,6 +228,7 @@ main(int argc, char *argv[])
 
     const char *root = poe_init_playground(argv[1], argv[2]);
     const char *prog = copy_program(root, argv[3]);
+    char **cmdl = construct_cmdl(argc - 4, argv + 4, prog);
 
     sigset_t mask, omask;
     sigemptyset(&mask);
@@ -245,7 +252,7 @@ main(int argc, char *argv[])
         close(stderr_fd[1]);
 
         sigprocmask(SIG_SETMASK, &omask, NULL);
-        child(root, argc - 4, argv + 4, prog);
+        child(root, cmdl);
     } else {
         sd_event *event = NULL;
         uint64_t now;
