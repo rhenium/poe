@@ -25,25 +25,34 @@ class Compiler < ApplicationRecord
     sf.write(snippet.code)
     sf.fsync
     of = Tempfile.open
+    ef = Tempfile.open
     pid = spawn(Rails.root.join("sandbox/safe_runner").to_s, baseroot, env_overlay, sf.path, *Shellwords.split(command_line),
                 in: :close, # TODO
                 out: of,
-                err: STDERR)
+                err: ef)
     _, pst = Process.waitpid2(pid)
+    ef.rewind
+    err = ef.read.force_encoding(Encoding::BINARY)
     if pst.signaled? || pst.exitstatus > 0
       result = :errored
       status = -1
+      Logger.error(err)
+      err = nil
     else
-      result = :success
-      status = 0
+      rx, status = err.slice!(0, 8).unpack("ii")
+      result = rx == 0 ? :success : :failed
     end
 
     of.rewind
-    r.update!(output: of.read,
+    output = of.read(65535)
+    r.update!(output: output,
+              truncated: !of.eof?,
               status: status,
-              result: result)
-  rescue
+              result: result,
+              error: err)
+  rescue => e
     r.update!(status: -1, result: :errored)
+    raise e
   ensure
     sf.close if sf
     of.close if of

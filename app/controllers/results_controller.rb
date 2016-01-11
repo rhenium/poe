@@ -10,7 +10,7 @@ class ResultsController < ApplicationController
   end
 
   def show
-    render text: render_to_string(partial: "results/result", locals: { result: @result, compiler: @result.compiler }), content_type: "text/plain"
+    render plain: render_to_string(partial: "results/result", locals: { result: @result, compiler: @result.compiler })
   end
 
   private

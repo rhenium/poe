@@ -7,7 +7,7 @@
       %div
         Status: #{result.status}
 - else
-  .result-item.panel.panel-default{"data-compiler-id": compiler.id, "data-id": result.id, "data-status": (result ? "running" : "notran")}
+  .result-item.panel.panel-default{"data-compiler-id": compiler.id, "data-id": result && result.id, "data-status": (result ? "running" : "notran")}
     .panel-heading= compiler
     .panel-body
       %p running....

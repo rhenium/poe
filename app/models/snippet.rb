@@ -1,7 +1,7 @@
 class Snippet < ApplicationRecord
   has_many :results
 
-  validates :code, length: { maximum: 65535, tokenizer: :bytes.to_proc }
+  validates :code_bytes, length: { maximum: 65535 }
 
   def compilers
     Compiler.where(language: language)
@@ -10,5 +10,10 @@ class Snippet < ApplicationRecord
   def results_all
     r = results.map { |r| [r.compiler_id, r] }.to_h
     compilers.map { |c| [r[c.id], c] }
+  end
+
+  private
+  def code_bytes
+    code.bytes
   end
 end

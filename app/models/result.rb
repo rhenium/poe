@@ -15,20 +15,37 @@ class Result < ApplicationRecord
     ret = []
     while orig.bytesize > 0
       fd, len = orig.slice!(0, 5).unpack("CV")
-      raise "output is too short" if !len || orig.bytesize < len
+      if !truncated? && (!len || orig.bytesize < len)
+        raise "output is too short"
+      end
       ret << [fd, orig.slice!(0, len)]
     end
     ret
   end
 
   def formatted_output
-    parse_output.inject("".b) { |s, (fd, c)|
+    s = "".b
+    last_c = nil
+    parse_output.each { |fd, c|
       if fd == 1
         s << CGI.escapeHTML(c)
       else
         s << "<span style='color: red'>" << CGI.escapeHTML(c) << "</span>"
       end
-    }.html_safe
+      last_c = c
+    }
+
+    if truncated?
+      s << "<span style='color: white; background-color: black'>#truncated#</span>"
+    elsif last_c && last_c[-1] != "\n"
+      s << "<span style='color: white; background-color: black'>%</span>"
+    end
+
+    if error.present?
+      s << "<span style='color: #6666ff; font-style: bold'>" << CGI.escapeHTML(error) << "</span>"
+    end
+
+    s.html_safe
   end
 
   def self.prepare_execution(compiler, snippet)

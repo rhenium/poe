@@ -16,6 +16,7 @@ gem "bootstrap-sass"
 gem "codemirror-rails"
 
 gem "plum"
+gem "thin"
 
 group :development, :test do
   gem "byebug"
