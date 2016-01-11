@@ -9,9 +9,10 @@
           %tr
             %th Result
             %td= result.errored? ? "Error" : result.timedout? ? "Time limit exceeded" : result.failed? ? "Runtime error" : "Success"
-          %tr
-            %th Exit code
-            %td= result.status
+          - unless result.status.negative?
+            %tr
+              %th Exit code
+              %td= result.status
 - else
   .result-item.panel.panel-default{"data-compiler-id": compiler.id, "data-id": result && result.id, "data-status": (result ? "running" : "notran")}
     .panel-heading= compiler
