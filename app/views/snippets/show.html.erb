@@ -1,6 +1,0 @@
-<%= render "form", snippet: @snippet %>
-<span style="display: none" id="snippet-id"><%= @snippet.id %></span>
-
-<% @snippet.results_all.each do |result, compiler| %>
-  <%= render partial: "results/result", locals: { result: result, compiler: compiler } %>
-<% end %>

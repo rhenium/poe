@@ -1,0 +1,16 @@
+!!!
+%html{lang: "ja"}
+  %head
+    %meta{charset: "UTF-8"}/
+    %meta{content: "width=device-width, initial-scale=1", name: "viewport"}/
+    %title poe
+    = csrf_meta_tags
+    = stylesheet_link_tag("application", media: "all")
+  %body
+    %nav.navbar.navbar-default.navbar-static-top
+      .container-fluid
+        .navbar-header
+          %a.navbar-brand{href: "/"}= application_name
+    .container-fluid
+      = yield
+    = javascript_include_tag("application")

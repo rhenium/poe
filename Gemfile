@@ -5,6 +5,8 @@ gem "mysql2", ">= 0.3.18", "< 0.5"
 gem "sidekiq"
 gem "sinatra", require: false
 
+gem "haml"
+
 gem "sprockets"
 gem "sass-rails"
 gem "uglifier", ">= 1.3.0"

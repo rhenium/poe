@@ -1,0 +1,15 @@
+.panel.panel-default
+  .panel-body
+    = form_for(snippet, url: "/", html: { method: "post" }) do |f|
+      - if snippet.errors.any?
+        .alert.alert-danger{:role => "alert"}
+          %p
+            = pluralize(snippet.errors.count, "error")
+            prohibited this snippet from being saved:
+          %ul
+            - snippet.errors.full_messages.each do |message|
+              %li= message
+      #code-field.form-group
+        %textarea{name: "snippet[code]", style: "display: none"}= snippet.code
+      %input{type: "hidden", name: "snippet[language]", value: "Ruby"}
+      %button.btn.btn-default{type: "submit"} Run

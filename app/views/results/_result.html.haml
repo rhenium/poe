@@ -1,0 +1,13 @@
+- if result && result.finished?
+  .result-item.panel{class: (result.success? ? "panel-success" : "panel-danger"), "data-id": result.id}
+    .panel-heading= compiler
+    .panel-body
+      %pre
+        %code= result.formatted_output
+      %div
+        Status: #{result.status}
+- else
+  .result-item.panel.panel-default{"data-compiler-id": compiler.id, "data-id": result.id, "data-status": (result ? "running" : "notran")}
+    .panel-heading= compiler
+    .panel-body
+      %p running....
