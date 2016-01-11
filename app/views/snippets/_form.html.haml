@@ -11,5 +11,8 @@
               %li= message
       #code-field.form-group
         %textarea{name: "snippet[code]", style: "display: none"}= snippet.code
-      %input{type: "hidden", name: "snippet[language]", value: "Ruby"}
-      %button.btn.btn-default{type: "submit"} Run
+      .form-inline
+        %select.form-control{name: "snippet[language]"}
+          - ["Ruby", "PHP"].each do |lang|
+            %option{selected: (snippet.language == lang ? "selected" : nil)}= lang
+        %button.btn.btn-default{type: "submit"} Run
