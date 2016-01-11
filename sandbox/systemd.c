@@ -10,7 +10,7 @@ static sd_bus *connection = NULL;
 void
 poe_init_systemd(pid_t pid)
 {
-    if (asprintf(&unit, "poe-sandbox-%d.scope", pid) == -1) ERROR("asprintf() failed");
+    NONNEGATIVE(asprintf(&unit, "poe-sandbox-%d.scope", pid));
 
 #define test(val) if((val) == -1) ERROR("sd_bus function failed")
     test(sd_bus_open_system(&connection));

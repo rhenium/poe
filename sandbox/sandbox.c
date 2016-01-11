@@ -42,25 +42,25 @@ child(const char *root, int cmdl, char *cmd[], const char *prog)
     assert(pid == 1);
 
     // die when parent dies
-    if (prctl(PR_SET_PDEATHSIG, SIGKILL, 0, 0, 0) == -1) ERROR("prctl(PR_SET_PDEATHSIG, SIGKILL) failed");
+    NONNEGATIVE(prctl(PR_SET_PDEATHSIG, SIGKILL, 0, 0, 0));
 
-    if (sethostname(POE_HOSTNAME, strlen(POE_HOSTNAME)) == -1) ERROR("sethostname() failed");
-    if (mount(NULL, "/",        NULL,           MS_PRIVATE | MS_REC, NULL) == -1) ERROR("mount / failed");
-    if (mount(root, root,       "bind",         MS_BIND | MS_REC, NULL) == -1) ERROR("bind root failed");
-    if (chroot(root) == -1) ERROR("chroot() failed");
-    // if (mount(NULL, "/proc",    "proc",         MS_NOSUID | MS_NOEXEC | MS_NODEV, NULL) == -1) ERROR("mount /proc failed");
-    // if (mount(NULL, "/dev",     "devtmpfs",     MS_NOSUID | MS_NOEXEC, NULL) == -1) ERROR("mount /dev failed");
-    // if (mount(NULL, "/dev/shm", "tmpfs",        MS_NOSUID | MS_NODEV, NULL) == -1) ERROR("mount /dev/shm failed");
+    NONNEGATIVE(sethostname(POE_HOSTNAME, strlen(POE_HOSTNAME)));
+    NONNEGATIVE(mount(NULL, "/",        NULL,           MS_PRIVATE | MS_REC, NULL));
+    NONNEGATIVE(mount(root, root,       "bind",         MS_BIND | MS_REC, NULL));
+    NONNEGATIVE(chroot(root));
+    // NONNEGATIVE(mount(NULL, "/proc",    "proc",         MS_NOSUID | MS_NOEXEC | MS_NODEV, NULL));
+    // NONNEGATIVE(mount(NULL, "/dev",     "devtmpfs",     MS_NOSUID | MS_NOEXEC, NULL));
+    // NONNEGATIVE(mount(NULL, "/dev/shm", "tmpfs",        MS_NOSUID | MS_NODEV, NULL));
 
     struct passwd *pw = getpwnam(POE_USERNAME);
     if (!pw) ERROR("getpwnam() failed");
 
-    if (mount(NULL, pw->pw_dir, "tmpfs", MS_NOSUID | MS_NODEV, NULL) == -1) ERROR("mount home failed");
-    if (chdir("/tmp") == -1) ERROR("chdir(/tmp) failed");
-    if (setsid() == -1) ERROR("setsid() failed");
-    if (initgroups(POE_USERNAME, pw->pw_gid) == -1) ERROR("initgroups() failed");
-    if (setresgid(pw->pw_gid, pw->pw_gid, pw->pw_gid) == -1) ERROR("setresgid() failed");
-    if (setresuid(pw->pw_uid, pw->pw_uid, pw->pw_uid) == -1) ERROR("setresuid() failed");
+    NONNEGATIVE(mount(NULL, pw->pw_dir, "tmpfs", MS_NOSUID | MS_NODEV, NULL));
+    NONNEGATIVE(chdir("/tmp"));
+    NONNEGATIVE(setsid());
+    NONNEGATIVE(initgroups(POE_USERNAME, pw->pw_gid));
+    NONNEGATIVE(setresgid(pw->pw_gid, pw->pw_gid, pw->pw_gid));
+    NONNEGATIVE(setresuid(pw->pw_uid, pw->pw_uid, pw->pw_uid));
 
     char *env[] = {
         "PATH=/opt/bin:/usr/bin",
@@ -69,8 +69,7 @@ child(const char *root, int cmdl, char *cmd[], const char *prog)
         NULL,
         NULL
     };
-
-    if (asprintf(env + 3, "HOME=%s", pw->pw_dir) == -1) ERROR("asprintf() failed");
+    NONNEGATIVE(asprintf(env + 3, "HOME=%s", pw->pw_dir));
 
     for (int i = 0; i < cmdl; i++) {
         if (!strcmp(cmd[i], "PROGRAM")) {
@@ -79,12 +78,12 @@ child(const char *root, int cmdl, char *cmd[], const char *prog)
     }
 
     // wait parent
-    if (kill(pid, SIGSTOP) == -1) ERROR("kill(self, SIGSTOP) failed");
+    NONNEGATIVE(kill(pid, SIGSTOP));
 
-    if (prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0) == -1) ERROR("ptctl(PR_SET_NO_NEW_PRIVS, 1) failed");
+    NONNEGATIVE(prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0));
     poe_init_seccomp(SCMP_ACT_TRACE(0));
 
-    if (execvpe(cmd[0], cmd, env) == -1) ERROR("execvpe() failed");
+    NONNEGATIVE(execvpe(cmd[0], cmd, env));
 }
 
 static inline long
@@ -141,7 +140,7 @@ sigchld_handler(sd_event_source *es, const struct signalfd_siginfo *si, void *vm
     while (true) {
         int status;
         pid_t spid = waitpid(-mpid, &status, WNOHANG | __WALL);
-        if (spid == -1) ERROR("waitpid() failed");
+        NONNEGATIVE(spid);
         if (!spid) break;
 
         if (WIFEXITED(status) && spid == mpid) {
@@ -203,12 +202,12 @@ stdout_handler(sd_event_source *es, int fd, uint32_t revents, void *vorig_fd)
         if (errno == EAGAIN) {
             return 0;
         } else {
-            ERROR("read() failed");
+            NONNEGATIVE(n);
         }
     } else {
-        if (write(STDOUT_FILENO, &orig_fd, sizeof(orig_fd)) < 0) ERROR("write() failed");
-        if (write(STDOUT_FILENO, &n, sizeof(n)) < 0) ERROR("write() failed");
-        if (write(STDOUT_FILENO, buf, (size_t)n) < 0) ERROR("write() failed");
+        NONNEGATIVE(write(STDOUT_FILENO, &orig_fd, sizeof(orig_fd)));
+        NONNEGATIVE(write(STDOUT_FILENO, &n, sizeof(n)));
+        NONNEGATIVE(write(STDOUT_FILENO, buf, (size_t)n));
     }
 
     return 0;
@@ -221,7 +220,6 @@ main(int argc, char *argv[])
         ERROR("usage: %s baseroot envroot program cmdl..", program_invocation_short_name);
     }
 
-    int rc;
     const char *root = poe_init_playground(argv[1], argv[2]);
     const char *prog = copy_program(root, argv[3]);
 
@@ -231,14 +229,14 @@ main(int argc, char *argv[])
     sigprocmask(SIG_BLOCK, &mask, &omask);
 
     int stdout_fd[2], stderr_fd[2];
-    if (pipe(stdout_fd) == -1) ERROR("pipe() failed");
-    if (pipe(stderr_fd) == -1) ERROR("pipe() failed");
+    NONNEGATIVE(pipe(stdout_fd));
+    NONNEGATIVE(pipe(stderr_fd));
 
     // TODO: CLONE_NEWUSER
     pid_t pid = (pid_t)syscall(SYS_clone, SIGCHLD | CLONE_NEWIPC | CLONE_NEWNS | CLONE_NEWPID | CLONE_NEWUTS | CLONE_NEWNET, 0);
-    if (pid == -1) {
-        ERROR("clone() failed");
-    } else if (pid == 0) {
+    NONNEGATIVE(pid);
+
+    if (pid == 0) {
         dup2(stdout_fd[1], STDOUT_FILENO);
         close(stdout_fd[0]);
         close(stdout_fd[1]);
@@ -250,30 +248,22 @@ main(int argc, char *argv[])
         child(root, argc - 4, argv + 4, prog);
     } else {
         sd_event *event = NULL;
-
-        rc = sd_event_default(&event);
-        if (rc < 0) ERROR("sd_event_default() failed");
-        rc = sd_event_add_signal(event, NULL, SIGCHLD, sigchld_handler, &pid);
-        if (rc < 0) ERROR("sd_event_add_signal() failed");
         uint64_t now;
-        rc = sd_event_now(event, CLOCK_MONOTONIC, &now);
-        if (rc < 0) ERROR("sd_event_now() failed");
-        rc = sd_event_add_time(event, NULL, CLOCK_MONOTONIC, now + POE_TIME_LIMIT, 0, timer_handler, &pid);
-        if (rc < 0) ERROR("sd_event_add_time() failed");
         int stdout_fileno = STDOUT_FILENO;
-        rc = sd_event_add_io(event, NULL, stdout_fd[0], EPOLLIN, stdout_handler, &stdout_fileno);
-        if (rc < 0) ERROR("sd_event_add_io() failed");
         int stderr_fileno = STDERR_FILENO;
-        rc = sd_event_add_io(event, NULL, stderr_fd[0], EPOLLIN, stdout_handler, &stderr_fileno);
-        if (rc < 0) ERROR("sd_event_add_io() failed");
 
-        rc = ptrace(PTRACE_SEIZE, pid, NULL, PTRACE_O_TRACECLONE | PTRACE_O_TRACEFORK | PTRACE_O_TRACESECCOMP | PTRACE_O_TRACEVFORK);
-        if (rc < 0) ERROR("ptrace(PTRACE_SEIZE, ) failed");
+        NONNEGATIVE(sd_event_default(&event));
+        NONNEGATIVE(sd_event_add_signal(event, NULL, SIGCHLD, sigchld_handler, &pid));
+        NONNEGATIVE(sd_event_now(event, CLOCK_MONOTONIC, &now));
+        NONNEGATIVE(sd_event_add_time(event, NULL, CLOCK_MONOTONIC, now + POE_TIME_LIMIT, 0, timer_handler, &pid));
+        NONNEGATIVE(sd_event_add_io(event, NULL, stdout_fd[0], EPOLLIN, stdout_handler, &stdout_fileno));
+        NONNEGATIVE(sd_event_add_io(event, NULL, stderr_fd[0], EPOLLIN, stdout_handler, &stderr_fileno));
+
+        NONNEGATIVE(ptrace(PTRACE_SEIZE, pid, NULL, PTRACE_O_TRACECLONE | PTRACE_O_TRACEFORK | PTRACE_O_TRACESECCOMP | PTRACE_O_TRACEVFORK));
 
         poe_init_systemd(pid);
 
-        rc = sd_event_loop(event);
-        if (rc < 0) ERROR("sd_event_loop() failed");
+        NONNEGATIVE(sd_event_loop(event));
     }
 
     ERROR("unreachable");

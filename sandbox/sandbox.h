@@ -31,19 +31,19 @@
 #include <systemd/sd-daemon.h>
 #include <systemd/sd-event.h>
 
-#define DEBUG true
-#define POE_USERNAME "nobody"
-#define POE_HOSTNAME "poe-sandbox"
-
 #define POE_LOWERDIR "/"
 #define POE_TEMPORARY_BASE "/tmp/poe"
 #define POE_UPPERDIR_TEMPLATE POE_TEMPORARY_BASE "/upperXXXXXX"
 #define POE_WORKDIR_TEMPLATE POE_TEMPORARY_BASE "/workXXXXXX"
 #define POE_MERGEDDIR_TEMPLATE POE_TEMPORARY_BASE "/mergedXXXXXX"
 
+#define POE_USERNAME "nobody"
+#define POE_HOSTNAME "poe-sandbox"
 #define POE_MEMORY_LIMIT (1024ULL * 1024ULL * 128ULL)
 #define POE_TASKS_LIMIT 32ULL
 #define POE_TIME_LIMIT (2ULL * 1000ULL * 1000ULL) // us
+
+#define NONNEGATIVE(s) if ((s) < 0) ERROR("CRITICAL: %s:%d %s", __FILE__, __LINE__, #s)
 
 enum poe_exit_reason {
     POE_SUCCESS,
