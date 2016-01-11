@@ -4,6 +4,19 @@ static char *upperdir = NULL;
 static char *workdir = NULL;
 static char *mergeddir = NULL;
 
+static int
+rmrf_cb(const char *fpath, const struct stat *sb, int typeflag, struct FTW *ftwbuf)
+{
+    (void)sb; (void)typeflag; (void)ftwbuf;
+    return remove(fpath);
+}
+
+static int
+rmrf(const char *path)
+{
+    return nftw(path, rmrf_cb, 64, FTW_DEPTH | FTW_PHYS);
+}
+
 char *
 poe_init_playground(const char *base, const char *env)
 {
@@ -37,15 +50,15 @@ poe_destroy_playground()
     struct stat s;
     if (mergeddir) {
         umount(mergeddir);
-        if (rmdir(mergeddir) != -1) fprintf(stderr, "failed remove mergeddir");
+        rmrf(mergeddir);
         free(mergeddir);
     }
     if (workdir && stat(workdir, &s) != -1) {
-        if (rmdir(workdir) != -1) fprintf(stderr, "failed remove workdir");
+        rmrf(workdir);
         free(workdir);
     }
     if (upperdir && stat(upperdir, &s) != -1) {
-        fprintf(stderr, "remove upperdir");
+        rmrf(upperdir);
         free(upperdir);
     }
 }
