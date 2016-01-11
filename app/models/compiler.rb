@@ -36,16 +36,20 @@ class Compiler < ApplicationRecord
     if pst.signaled? || pst.exitstatus > 0
       result = :errored
       status = -1
-      Logger.error(err)
+      Rails.logger.error(err)
       err = nil
     else
       rx, status = err.slice!(0, 8).unpack("ii")
-      result = rx == 0 ? :success : :failed
+      if status == 0
+        result = :success
+      else
+        result = [:failed, :failed, :timedout][rx]
+      end
     end
 
     of.rewind
     output = of.read(65535)
-    r.update!(output: output,
+    r.update!(output: output.to_s,
               truncated: !of.eof?,
               status: status,
               result: result,

@@ -4,7 +4,7 @@ class Result < ApplicationRecord
   belongs_to :snippet
   belongs_to :compiler
 
-  enum result: [:success, :failed, :errored, :running]
+  enum result: [:success, :failed, :errored, :timedout, :running]
 
   def finished?
     !running?
@@ -14,8 +14,10 @@ class Result < ApplicationRecord
     orig = output.b
     ret = []
     while orig.bytesize > 0
-      fd, len = orig.slice!(0, 5).unpack("CV")
+      fd, len = orig.slice!(0, 8).unpack("ii")
       if !truncated? && (!len || orig.bytesize < len)
+        p fd
+        p len
         raise "output is too short"
       end
       ret << [fd, orig.slice!(0, len)]
