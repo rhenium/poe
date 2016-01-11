@@ -1,6 +1,4 @@
 #include "sandbox.h"
-#include <systemd/sd-bus.h>
-#include <systemd/sd-login.h>
 
 static const char *dbus_name = "org.freedesktop.systemd1";
 static const char *dbus_path = "/org/freedesktop/systemd1";

@@ -14,15 +14,20 @@
 #include <seccomp.h>
 #include <assert.h>
 #include <signal.h>
+#include <time.h>
 #include <sys/wait.h>
 #include <sys/mount.h>
 #include <sys/ptrace.h>
-#include <sys/signalfd.h>
 #include <sys/reg.h>
 #include <sys/prctl.h>
 #include <sys/syscall.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+
+#include <systemd/sd-bus.h>
+#include <systemd/sd-login.h>
+#include <systemd/sd-daemon.h>
+#include <systemd/sd-event.h>
 
 #define DEBUG true
 #define POE_USERNAME "nobody"
@@ -36,6 +41,7 @@
 
 #define POE_MEMORY_LIMIT (1024ULL * 1024ULL * 5ULL)
 #define POE_TASKS_LIMIT 32ULL
+#define POE_TIME_LIMIT (2ULL * 1000ULL * 1000ULL) // us
 
 #define ERROR(...) do {\
     fprintf(stderr, __VA_ARGS__);\

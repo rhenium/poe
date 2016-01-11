@@ -1,6 +1,6 @@
 #include "sandbox.h"
 
-static void
+    static void
 child(const char *root, int cmdl, char *cmd[], const char *prog)
 {
     pid_t pid = (pid_t)syscall(SYS_getpid);
@@ -48,47 +48,47 @@ child(const char *root, int cmdl, char *cmd[], const char *prog)
     if (execvpe(cmd[0], cmd, env) == -1) ERROR("execvpe() failed");
 }
 
-static inline long
+    static inline long
 get_arg(pid_t pid, int i)
 {
     static const int regs[] = {RDI, RSI, RDX, R10, R8, R9};
     return ptrace(PTRACE_PEEKUSER, pid, sizeof(long) * (size_t)regs[i - 1]);
 }
 
-static enum poe_handler_result
+    static enum poe_handler_result
 handle_syscall(pid_t pid, int syscalln)
 {
     long arg1;
     switch (syscalln) {
-    case SYS_write:
-        arg1 = get_arg(pid, 1);
-        if (arg1 == 1 || arg1 == 2) {
-            char *pp = (char *)get_arg(pid, 2);
-            int count = (int)get_arg(pid, 3);
-            char fd = (char)arg1;
-            write(1, (void *)&fd, sizeof(fd));
-            write(1, (void *)&count, sizeof(count));
-            for (int k = 0; k < count; k++, pp++) {
-                char d = (char)ptrace(PTRACE_PEEKDATA, pid, pp);
-                write(1, &d, 1);
+        case SYS_write:
+            arg1 = get_arg(pid, 1);
+            if (arg1 == 1 || arg1 == 2) {
+                char *pp = (char *)get_arg(pid, 2);
+                int count = (int)get_arg(pid, 3);
+                char fd = (char)arg1;
+                write(1, (void *)&fd, sizeof(fd));
+                write(1, (void *)&count, sizeof(count));
+                for (int k = 0; k < count; k++, pp++) {
+                    char d = (char)ptrace(PTRACE_PEEKDATA, pid, pp);
+                    write(1, &d, 1);
+                }
+                ptrace(PTRACE_POKEUSER, pid, sizeof(long) * RAX, count);
+                return POE_HANDLED;
             }
-            ptrace(PTRACE_POKEUSER, pid, sizeof(long) * RAX, count);
-            return POE_HANDLED;
-        }
-        break;
-    default:
-        if (DEBUG) {
-            char *rule = seccomp_syscall_resolve_num_arch(SCMP_ARCH_NATIVE, syscalln);
-            if (!rule) ERROR("seccomp_syscall_resolve_num_arch() failed");
-            fprintf(stderr, "syscall: %s\n", rule);
-            free(rule);
-        }
-        return POE_PROHIBITED;
+            break;
+        default:
+            if (DEBUG) {
+                char *rule = seccomp_syscall_resolve_num_arch(SCMP_ARCH_NATIVE, syscalln);
+                if (!rule) ERROR("seccomp_syscall_resolve_num_arch() failed");
+                fprintf(stderr, "syscall: %s\n", rule);
+                free(rule);
+            }
+            return POE_PROHIBITED;
     }
     return POE_ALLOWED;
 }
 
-static void
+    static void
 result(uint32_t status, uint32_t signal)
 {
     write(2, (void *)&status, sizeof(status));
@@ -97,66 +97,7 @@ result(uint32_t status, uint32_t signal)
     exit(0);
 }
 
-static void
-parent(const pid_t mpid, int sig_fd)
-{
-    long trace_flags = PTRACE_O_TRACECLONE | PTRACE_O_TRACEFORK | PTRACE_O_TRACESECCOMP | PTRACE_O_TRACEVFORK;
-    if (ptrace(PTRACE_SEIZE, mpid, NULL, trace_flags) == -1) ERROR("ptrace(PTRACE_SEIZE, ) failed");
-
-    poe_init_systemd(mpid);
-
-    while (true) {
-        struct signalfd_siginfo si;
-        ssize_t bytes_r = read(sig_fd, &si, sizeof(si));
-        if (bytes_r == -1) ERROR("read(sig_fd, ) failed");
-        if (si.ssi_signo != SIGCHLD) ERROR("parent: unexpected signal");
-
-        while (true) {
-            int status;
-            pid_t spid = waitpid(-mpid, &status, WNOHANG | __WALL);
-            if (spid == -1) ERROR("waitpid() failed");
-            if (!spid) break;
-
-            if (WIFEXITED(status) && spid == mpid) {
-                result(WEXITSTATUS(status), 0);
-            } else if (WIFSIGNALED(status)) {
-                result(0, WTERMSIG(status));
-            } else if (WIFSTOPPED(status)) {
-                int e = status >> 16 & 0xff;
-                switch (e) {
-                case PTRACE_EVENT_SECCOMP:
-                    errno = 0;
-                    int syscalln = ptrace(PTRACE_PEEKUSER, spid, sizeof(long) * ORIG_RAX);
-                    if (errno) ERROR("ptrace(PTRACE_PEEKUSER, ) failed");
-                    enum poe_handler_result ret = handle_syscall(spid, syscalln);
-                    if (ret == POE_HANDLED) {
-                        // cancel syscall
-                        ptrace(PTRACE_POKEUSER, spid, sizeof(long) * ORIG_RAX, -1);
-                    } else if (ret == POE_PROHIBITED) {
-                        // implicitly prohibited syscall
-                        kill(spid, SIGKILL);
-                        char *rule = seccomp_syscall_resolve_num_arch(SCMP_ARCH_NATIVE, syscalln);
-                        if (rule) fprintf(stderr, "#### prohibited syscall: %s ####", rule);
-                        free(rule);
-                        result(0, SIGSYS);
-                    }
-                    ptrace(PTRACE_CONT, spid, 0, 0);
-                    break;
-                case PTRACE_EVENT_CLONE:
-                case PTRACE_EVENT_FORK:
-                case PTRACE_EVENT_VFORK:
-                    ptrace(PTRACE_CONT, spid, 0, 0);
-                    break;
-                default:
-                    ptrace(PTRACE_CONT, spid, 0, WSTOPSIG(status));
-                    break;
-                }
-            }
-        }
-    }
-}
-
-static const char *
+    static const char *
 copy_program(const char *root, const char *progpath)
 {
     FILE *src = fopen(progpath, "rb");
@@ -186,13 +127,71 @@ copy_program(const char *root, const char *progpath)
     return newrel;
 }
 
-int
+    static int
+sigchld_handler(sd_event_source *es, const struct signalfd_siginfo *si, void *vmpid)
+{
+    pid_t mpid = *(pid_t *)vmpid;
+    if (si->ssi_signo != SIGCHLD) ERROR("parent: unexpected signal");
+
+    while (true) {
+        int status;
+        pid_t spid = waitpid(-mpid, &status, WNOHANG | __WALL);
+        if (spid == -1) ERROR("waitpid() failed");
+        if (!spid) break;
+
+        if (WIFEXITED(status) && spid == mpid) {
+            result(WEXITSTATUS(status), 0);
+        } else if (WIFSIGNALED(status)) {
+            result(0, WTERMSIG(status));
+        } else if (WIFSTOPPED(status)) {
+            int e = status >> 16 & 0xff;
+            switch (e) {
+                case PTRACE_EVENT_SECCOMP:
+                    errno = 0;
+                    int syscalln = ptrace(PTRACE_PEEKUSER, spid, sizeof(long) * ORIG_RAX);
+                    if (errno) ERROR("ptrace(PTRACE_PEEKUSER, ) failed");
+                    enum poe_handler_result ret = handle_syscall(spid, syscalln);
+                    if (ret == POE_HANDLED) {
+                        // cancel syscall
+                        ptrace(PTRACE_POKEUSER, spid, sizeof(long) * ORIG_RAX, -1);
+                    } else if (ret == POE_PROHIBITED) {
+                        // implicitly prohibited syscall
+                        kill(spid, SIGKILL);
+                        char *rule = seccomp_syscall_resolve_num_arch(SCMP_ARCH_NATIVE, syscalln);
+                        if (rule) fprintf(stderr, "#### prohibited syscall: %s ####", rule);
+                        free(rule);
+                        result(0, SIGSYS);
+                    }
+                    ptrace(PTRACE_CONT, spid, 0, 0);
+                    break;
+                case PTRACE_EVENT_CLONE:
+                case PTRACE_EVENT_FORK:
+                case PTRACE_EVENT_VFORK:
+                    ptrace(PTRACE_CONT, spid, 0, 0);
+                    break;
+                default:
+                    ptrace(PTRACE_CONT, spid, 0, WSTOPSIG(status));
+                    break;
+            }
+        }
+    }
+}
+
+    static int
+timer_handler(sd_event_source *es, uint64_t usec, void *vmpid)
+{
+    pid_t mpid = *(pid_t *)vmpid;
+    ERROR("timeout");
+}
+
+    int
 main(int argc, char *argv[])
 {
     if (argc < 5) {
         ERROR("usage: %s baseroot envroot program cmdl..", program_invocation_short_name);
     }
 
+    int rc;
     const char *root = poe_init_playground(argv[1], argv[2]);
     const char *prog = copy_program(root, argv[3]);
 
@@ -200,19 +199,33 @@ main(int argc, char *argv[])
     sigemptyset(&mask);
     sigaddset(&mask, SIGCHLD);
     sigprocmask(SIG_BLOCK, &mask, &omask);
-    int sig_fd = signalfd(-1, &mask, SFD_CLOEXEC);
-    if (sig_fd == -1) ERROR("signalfd() failed");
 
-    // TODO: CLONE_NEWUSER? require CONFIG_USER_NS=y
+    // TODO: CLONE_NEWUSER
     pid_t pid = (pid_t)syscall(SYS_clone, SIGCHLD | CLONE_NEWIPC | CLONE_NEWNS | CLONE_NEWPID | CLONE_NEWUTS | CLONE_NEWNET, 0);
     if (pid == -1) {
         ERROR("clone() failed");
-    }
-    if (pid == 0) {
+    } else if (pid == 0) {
         sigprocmask(SIG_SETMASK, &omask, NULL);
         child(root, argc - 4, argv + 4, prog);
     } else {
-        parent(pid, sig_fd);
+        sd_event *event = NULL;
+
+        rc = sd_event_default(&event);
+        if (rc < 0) ERROR("sd_event_default() failed");
+        rc = sd_event_add_signal(event, NULL, SIGCHLD, sigchld_handler, &pid);
+        if (rc < 0) ERROR("sd_event_add_signal() failed");
+        uint64_t now;
+        rc = sd_event_now(event, CLOCK_MONOTONIC, &now);
+        if (rc < 0) ERROR("sd_event_now() failed");
+        rc = sd_event_add_time(event, NULL, CLOCK_MONOTONIC, now + POE_TIME_LIMIT, 0, timer_handler, &pid);
+        if (rc < 0) ERROR("sd_event_add_time() failed");
+        rc = ptrace(PTRACE_SEIZE, pid, NULL, PTRACE_O_TRACECLONE | PTRACE_O_TRACEFORK | PTRACE_O_TRACESECCOMP | PTRACE_O_TRACEVFORK);
+        if (rc < 0) ERROR("ptrace(PTRACE_SEIZE, ) failed");
+
+        poe_init_systemd(pid);
+
+        rc = sd_event_loop(event);
+        if (rc < 0) ERROR("sd_event_loop() failed");
     }
 
     ERROR("unreachable");
