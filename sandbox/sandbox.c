@@ -96,26 +96,7 @@ get_arg(pid_t pid, int i)
 
 static enum poe_handler_result
 handle_syscall(pid_t pid, int syscalln) {
-    long arg1;
     switch (syscalln) {
-    case SYS_write:
-        arg1 = get_arg(pid, 1);
-        if (arg1 == 1 || arg1 == 2) {
-            char *pp = (char *)get_arg(pid, 2);
-            int count = (int)get_arg(pid, 3);
-            char fd = (char)arg1;
-            fwrite(&fd, sizeof(fd), 1, stdout);
-            fwrite(&count, sizeof(count), 1, stdout);
-            for (int k = 0; k < count; k++, pp++) {
-                char d = (char)ptrace(PTRACE_PEEKDATA, pid, pp);
-                fwrite(&d, sizeof(d), 1, stdout);
-            }
-            ptrace(PTRACE_POKEUSER, pid, sizeof(long) * RAX, count);
-            return POE_HANDLED;
-        } else {
-            return POE_ALLOWED;
-        }
-        break;
     }
     return POE_PROHIBITED;
 }
@@ -209,6 +190,30 @@ timer_handler(sd_event_source *es, uint64_t usec, void *vmpid)
     return 0;
 }
 
+static int
+stdout_handler(sd_event_source *es, int fd, uint32_t revents, void *vorig_fd)
+{
+    (void)es; (void)revents;
+    int orig_fd = *(int *)vorig_fd;
+    char buf[BUFSIZ];
+    int n;
+
+    n = (int)read(fd, buf, sizeof(buf));
+    if (n < 0) {
+        if (errno == EAGAIN) {
+            return 0;
+        } else {
+            ERROR("read() failed");
+        }
+    } else {
+        if (write(STDOUT_FILENO, &orig_fd, sizeof(orig_fd)) < 0) ERROR("write() failed");
+        if (write(STDOUT_FILENO, &n, sizeof(n)) < 0) ERROR("write() failed");
+        if (write(STDOUT_FILENO, buf, (size_t)n) < 0) ERROR("write() failed");
+    }
+
+    return 0;
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -225,11 +230,22 @@ main(int argc, char *argv[])
     sigaddset(&mask, SIGCHLD);
     sigprocmask(SIG_BLOCK, &mask, &omask);
 
+    int stdout_fd[2], stderr_fd[2];
+    if (pipe(stdout_fd) == -1) ERROR("pipe() failed");
+    if (pipe(stderr_fd) == -1) ERROR("pipe() failed");
+
     // TODO: CLONE_NEWUSER
     pid_t pid = (pid_t)syscall(SYS_clone, SIGCHLD | CLONE_NEWIPC | CLONE_NEWNS | CLONE_NEWPID | CLONE_NEWUTS | CLONE_NEWNET, 0);
     if (pid == -1) {
         ERROR("clone() failed");
     } else if (pid == 0) {
+        dup2(stdout_fd[1], STDOUT_FILENO);
+        close(stdout_fd[0]);
+        close(stdout_fd[1]);
+        dup2(stderr_fd[1], STDERR_FILENO);
+        close(stderr_fd[0]);
+        close(stderr_fd[1]);
+
         sigprocmask(SIG_SETMASK, &omask, NULL);
         child(root, argc - 4, argv + 4, prog);
     } else {
@@ -244,6 +260,13 @@ main(int argc, char *argv[])
         if (rc < 0) ERROR("sd_event_now() failed");
         rc = sd_event_add_time(event, NULL, CLOCK_MONOTONIC, now + POE_TIME_LIMIT, 0, timer_handler, &pid);
         if (rc < 0) ERROR("sd_event_add_time() failed");
+        int stdout_fileno = STDOUT_FILENO;
+        rc = sd_event_add_io(event, NULL, stdout_fd[0], EPOLLIN, stdout_handler, &stdout_fileno);
+        if (rc < 0) ERROR("sd_event_add_io() failed");
+        int stderr_fileno = STDERR_FILENO;
+        rc = sd_event_add_io(event, NULL, stderr_fd[0], EPOLLIN, stdout_handler, &stderr_fileno);
+        if (rc < 0) ERROR("sd_event_add_io() failed");
+
         rc = ptrace(PTRACE_SEIZE, pid, NULL, PTRACE_O_TRACECLONE | PTRACE_O_TRACEFORK | PTRACE_O_TRACESECCOMP | PTRACE_O_TRACEVFORK);
         if (rc < 0) ERROR("ptrace(PTRACE_SEIZE, ) failed");
 

@@ -75,8 +75,8 @@ static const struct syscall_rule syscall_rules[] = {
     RULE(read,          ALLOW),
     RULE(readv,         ALLOW),
     RULE(pread64,       ALLOW),
-    RULE(write,         TRACE(1)),
-    RULE(writev,        ERRNO(ENOSYS)), // TODO
+    RULE(write,         ALLOW),
+    RULE(writev,        ALLOW),
     RULE(pwrite64,      ALLOW),
     RULE(lstat,         ALLOW),
     RULE(fstat,         ALLOW),
@@ -87,6 +87,8 @@ static const struct syscall_rule syscall_rules[] = {
     RULE(faccessat,     ALLOW),
     RULE(unlinkat,      ALLOW),
     RULE(fchdir,        ALLOW),
+    RULE(getpeername,   ALLOW),
+    RULE(syslog,        ERRNO(EPERM)),
 };
 #undef RULE
 static const int syscall_rules_count = sizeof(syscall_rules) / sizeof(struct syscall_rule);
