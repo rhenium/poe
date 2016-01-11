@@ -34,6 +34,9 @@
 #define POE_WORKDIR_TEMPLATE POE_TEMPORARY_BASE "/workXXXXXX"
 #define POE_MERGEDDIR_TEMPLATE POE_TEMPORARY_BASE "/mergedXXXXXX"
 
+#define POE_MEMORY_LIMIT (1024ULL * 1024ULL * 5ULL)
+#define POE_TASKS_LIMIT 32ULL
+
 #define ERROR(...) do {\
     fprintf(stderr, __VA_ARGS__);\
     if (syscall(SYS_getpid) != 1) poe_destroy_playground();\

@@ -5,8 +5,8 @@ child(const char *root, int cmdl, char *cmd[], const char *prog)
 {
     pid_t pid = (pid_t)syscall(SYS_getpid);
     assert(pid == 1);
-    //TODO: check FDs
-    // die if parent dies
+
+    // die when parent dies
     if (prctl(PR_SET_PDEATHSIG, SIGKILL, 0, 0, 0) == -1) ERROR("prctl(PR_SET_PDEATHSIG, SIGKILL) failed");
 
     if (sethostname(POE_HOSTNAME, strlen(POE_HOSTNAME)) == -1) ERROR("sethostname() failed");
@@ -103,6 +103,8 @@ parent(const pid_t mpid, int sig_fd)
     long trace_flags = PTRACE_O_TRACECLONE | PTRACE_O_TRACEFORK | PTRACE_O_TRACESECCOMP | PTRACE_O_TRACEVFORK;
     if (ptrace(PTRACE_SEIZE, mpid, NULL, trace_flags) == -1) ERROR("ptrace(PTRACE_SEIZE, ) failed");
 
+    poe_init_systemd(mpid);
+
     while (true) {
         struct signalfd_siginfo si;
         ssize_t bytes_r = read(sig_fd, &si, sizeof(si));
@@ -131,14 +133,12 @@ parent(const pid_t mpid, int sig_fd)
                         // cancel syscall
                         ptrace(PTRACE_POKEUSER, spid, sizeof(long) * ORIG_RAX, -1);
                     } else if (ret == POE_PROHIBITED) {
-                        if (DEBUG) {
-                            // implicitly prohibited syscall
-                            kill(spid, SIGKILL);
-                            char *rule = seccomp_syscall_resolve_num_arch(SCMP_ARCH_NATIVE, syscalln);
-                            if (rule) fprintf(stderr, "#### prohibited syscall: %s ####", rule);
-                            free(rule);
-                            result(0, SIGSYS);
-                        }
+                        // implicitly prohibited syscall
+                        kill(spid, SIGKILL);
+                        char *rule = seccomp_syscall_resolve_num_arch(SCMP_ARCH_NATIVE, syscalln);
+                        if (rule) fprintf(stderr, "#### prohibited syscall: %s ####", rule);
+                        free(rule);
+                        result(0, SIGSYS);
                     }
                     ptrace(PTRACE_CONT, spid, 0, 0);
                     break;
@@ -194,7 +194,6 @@ main(int argc, char *argv[])
     }
 
     const char *root = poe_init_playground(argv[1], argv[2]);
-
     const char *prog = copy_program(root, argv[3]);
 
     sigset_t mask, omask;
