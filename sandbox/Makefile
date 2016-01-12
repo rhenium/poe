@@ -5,4 +5,4 @@ LDFLAGS += -pie -Wl,-z,relro,-z,now
 
 sandbox: sandbox.c seccomp.c playground.c systemd.c
 install: sandbox
-	install -m 4755 -o root sandbox safe_runner
+	install -m 6755 -o root sandbox safe_runner
