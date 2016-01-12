@@ -56,6 +56,7 @@ static const struct syscall_rule syscall_rules[] = {
     RULE(getppid,       ALLOW),
     RULE(getpgrp,       ALLOW),
     RULE(getrandom,     ALLOW),
+    RULE(ppoll,         ALLOW),
 
     // ????
     RULE(socket,        ERRNO(ENOSYS)),
