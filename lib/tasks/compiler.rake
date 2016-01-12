@@ -31,7 +31,7 @@ namespace :compiler do
 
           Compiler.create!(language: "ruby",
                            version: args[:version],
-                           version_long: `#{destdir}#{prefix}/bin/ruby -v`.lines.first.chomp,
+                           version_long: `LD_LIBRARY_PATH=#{destdir}#{prefix}/lib #{destdir}#{prefix}/bin/ruby -v`.lines.first.chomp,
                            command_line: "#{prefix}/bin/ruby PROGRAM")
         }
       }
@@ -63,7 +63,7 @@ namespace :compiler do
 
           Compiler.create!(language: "php",
                            version: args[:version],
-                           version_long: `#{destdir}#{prefix}/bin/php -v`.line.first.chomp,
+                           version_long: `LD_LIBRARY_PATH=#{destdir}#{prefix}/lib #{destdir}#{prefix}/bin/php -v`.lines.first.chomp,
                            command_line: "#{prefix}/bin/php PROGRAM")
         }
       }
