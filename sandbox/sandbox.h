@@ -17,6 +17,7 @@
 #include <signal.h>
 #include <time.h>
 #include <ftw.h>
+#include <fcntl.h>
 #include <sys/wait.h>
 #include <sys/mount.h>
 #include <sys/ptrace.h>

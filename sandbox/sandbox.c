@@ -87,11 +87,24 @@ get_arg(pid_t pid, int i)
     return ptrace(PTRACE_PEEKUSER, pid, sizeof(intptr_t) * (size_t)regs[i - 1]);
 }
 
-static enum poe_handler_result
-handle_syscall(pid_t pid, int syscalln) {
+static void
+handle_syscall(pid_t pid)
+{
+    errno = 0;
+    int syscalln = ptrace(PTRACE_PEEKUSER, pid, sizeof(long) * ORIG_RAX);
+    if (errno) ERROR("ptrace(PTRACE_PEEKUSER) failed");
+
     switch (syscalln) {
+    default:
+        goto kill;
     }
-    return POE_PROHIBITED;
+kill:
+    kill(pid, SIGKILL);
+    char *rule = seccomp_syscall_resolve_num_arch(SCMP_ARCH_NATIVE, syscalln);
+    if (!rule) ERROR("seccomp_syscall_resolve_num_arch() failed");
+    FINISH(POE_SIGNALED, -1, "System call %s is blocked", rule);
+allowed:
+    ptrace(PTRACE_CONT, pid, 0, 0);
 }
 
 static const char *
@@ -145,21 +158,7 @@ sigchld_handler(sd_event_source *es, const struct signalfd_siginfo *si, void *vm
             int e = status >> 16 & 0xff;
             switch (e) {
             case PTRACE_EVENT_SECCOMP:
-                errno = 0;
-                int syscalln = ptrace(PTRACE_PEEKUSER, spid, sizeof(long) * ORIG_RAX);
-                if (errno) ERROR("ptrace(PTRACE_PEEKUSER, ) failed");
-                enum poe_handler_result ret = handle_syscall(spid, syscalln);
-                if (ret == POE_HANDLED) {
-                    // cancel syscall
-                    ptrace(PTRACE_POKEUSER, spid, sizeof(long) * ORIG_RAX, -1);
-                } else if (ret == POE_PROHIBITED) {
-                    // implicitly prohibited syscall
-                    kill(spid, SIGKILL);
-                    char *rule = seccomp_syscall_resolve_num_arch(SCMP_ARCH_NATIVE, syscalln);
-                    if (!rule) ERROR("seccomp_syscall_resolve_num_arch() failed");
-                    FINISH(POE_SIGNALED, -1, "System call %s is blocked", rule);
-                }
-                ptrace(PTRACE_CONT, spid, 0, 0);
+                handle_syscall(spid);
                 break;
             case PTRACE_EVENT_CLONE:
             case PTRACE_EVENT_FORK:
@@ -176,9 +175,21 @@ sigchld_handler(sd_event_source *es, const struct signalfd_siginfo *si, void *vm
 }
 
 static int
+sigint_handler(sd_event_source *es, const struct signalfd_siginfo *si, void *vmpid)
+{
+    (void)es;
+    (void)si;
+    (void)vmpid;
+    FINISH(POE_TIMEDOUT, -1, "Supervisor terminated");
+    return 0;
+}
+
+static int
 timer_handler(sd_event_source *es, uint64_t usec, void *vmpid)
 {
-    (void)es; (void)usec; (void)vmpid;
+    (void)es;
+    (void)usec;
+    (void)vmpid;
     FINISH(POE_TIMEDOUT, -1, NULL);
     return 0;
 }
@@ -186,7 +197,8 @@ timer_handler(sd_event_source *es, uint64_t usec, void *vmpid)
 static int
 stdout_handler(sd_event_source *es, int fd, uint32_t revents, void *vorig_fd)
 {
-    (void)es; (void)revents;
+    (void)es;
+    (void)revents;
     int orig_fd = *(int *)vorig_fd;
     char buf[BUFSIZ];
     int n;
@@ -233,6 +245,8 @@ main(int argc, char *argv[])
     sigset_t mask, omask;
     sigemptyset(&mask);
     sigaddset(&mask, SIGCHLD);
+    sigaddset(&mask, SIGINT); // auau
+    sigaddset(&mask, SIGTERM); // auau
     sigprocmask(SIG_BLOCK, &mask, &omask);
 
     int stdout_fd[2], stderr_fd[2];
@@ -259,8 +273,18 @@ main(int argc, char *argv[])
         int stdout_fileno = STDOUT_FILENO;
         int stderr_fileno = STDERR_FILENO;
 
+        int fflags;
+        fflags = fcntl(stdout_fd[0], F_GETFL, 0);
+        NONNEGATIVE(fflags);
+        NONNEGATIVE(fcntl(stdout_fd[0], F_SETFL, fflags | O_NONBLOCK));
+        fflags = fcntl(stderr_fd[0], F_GETFL, 0);
+        NONNEGATIVE(fflags);
+        NONNEGATIVE(fcntl(stderr_fd[0], F_SETFL, fflags | O_NONBLOCK));
+
         NONNEGATIVE(sd_event_default(&event));
         NONNEGATIVE(sd_event_add_signal(event, NULL, SIGCHLD, sigchld_handler, &pid));
+        NONNEGATIVE(sd_event_add_signal(event, NULL, SIGINT, sigint_handler, &pid));
+        NONNEGATIVE(sd_event_add_signal(event, NULL, SIGTERM, sigint_handler, &pid));
         NONNEGATIVE(sd_event_now(event, CLOCK_MONOTONIC, &now));
         NONNEGATIVE(sd_event_add_time(event, NULL, CLOCK_MONOTONIC, now + POE_TIME_LIMIT, 0, timer_handler, &pid));
         NONNEGATIVE(sd_event_add_io(event, NULL, stdout_fd[0], EPOLLIN, stdout_handler, &stdout_fileno));
