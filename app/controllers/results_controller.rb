@@ -4,7 +4,9 @@ class ResultsController < ApplicationController
   def run
     compiler = Compiler.find(params[:compiler_id])
     snippet = Snippet.find(params[:snippet_id])
-    @result = compiler.run(snippet)
+    unless @result = Result.find_by(compiler: compiler, snippet: snippet)
+      @result = compiler.run(snippet)
+    end
 
     show
   end

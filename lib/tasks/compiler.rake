@@ -6,7 +6,9 @@ namespace :compiler do
   RUBIES = {
     "2.3.0" => "https://cache.ruby-lang.org/pub/ruby/2.3/ruby-2.3.0.tar.gz",
     "2.2.4" => "https://cache.ruby-lang.org/pub/ruby/2.2/ruby-2.2.4.tar.gz",
+    "2.2.3" => "https://cache.ruby-lang.org/pub/ruby/2.2/ruby-2.2.3.tar.gz",
     "2.1.8" => "https://cache.ruby-lang.org/pub/ruby/2.1/ruby-2.1.8.tar.gz",
+    "2.0.0-p648" => "https://cache.ruby-lang.org/pub/ruby/2.0/ruby-2.0.0-p648.tar.gz",
   }
   desc "Install a ruby"
   task :ruby, :version
@@ -27,7 +29,10 @@ namespace :compiler do
           system("make -j6") or raise("failed to make")
           system("make install DESTDIR=#{destdir.to_s}") or raise("failed to install")
 
-          Compiler.create!(language: "ruby", version: args[:version], command_line: "#{prefix}/bin/ruby PROGRAM")
+          Compiler.create!(language: "ruby",
+                           version: args[:version],
+                           version_long: `#{destdir}#{prefix}/bin/ruby -v`.lines.first.chomp,
+                           command_line: "#{prefix}/bin/ruby PROGRAM")
         }
       }
     }
@@ -56,7 +61,10 @@ namespace :compiler do
           system("make -j6") or raise("failed to make")
           system("make install INSTALL_ROOT=#{destdir.to_s}") or raise("failed to install")
 
-          Compiler.create!(language: "php", version: args[:version], command_line: "#{prefix}/bin/php PROGRAM")
+          Compiler.create!(language: "php",
+                           version: args[:version],
+                           version_long: `#{destdir}#{prefix}/bin/php -v`.line.first.chomp,
+                           command_line: "#{prefix}/bin/php PROGRAM")
         }
       }
     }

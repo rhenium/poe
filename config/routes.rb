@@ -1,14 +1,14 @@
 Rails.application.routes.draw do
+  post "results/run" => "results#run"
+  get "results/:id" => "results#show"
+  get "about/index"
+
   resources :snippets, only: [:new, :create, :update, :show], path: "", path_names: {
     new: "",
     create: "create",
     update: ":id",
     show: ":id"
   }
-
-  post "results/run" => "results#run"
-  get "results/:id" => "results#show"
-
   # Serve websocket cable requests in-process
   # mount ActionCable.server => "/cable"
 

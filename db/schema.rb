@@ -11,14 +11,15 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160111074143) do
+ActiveRecord::Schema.define(version: 20160111125018) do
 
   create_table "compilers", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4" do |t|
-    t.string   "language",     limit: 64, null: false
-    t.string   "version",      limit: 64, null: false
-    t.datetime "created_at",              null: false
-    t.datetime "updated_at",              null: false
-    t.string   "command_line",            null: false
+    t.string   "language",     limit: 64,    null: false
+    t.string   "version",      limit: 64,    null: false
+    t.datetime "created_at",                 null: false
+    t.datetime "updated_at",                 null: false
+    t.string   "command_line",               null: false
+    t.text     "version_long", limit: 65535, null: false
     t.index ["language", "version"], name: "index_compilers_on_language_and_version", unique: true, using: :btree
   end
 

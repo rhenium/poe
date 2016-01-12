@@ -16,8 +16,6 @@ class Result < ApplicationRecord
     while orig.bytesize > 0
       fd, len = orig.slice!(0, 8).unpack("ii")
       if !truncated? && (!len || orig.bytesize < len)
-        p fd
-        p len
         raise "output is too short"
       end
       ret << [fd, orig.slice!(0, len)]

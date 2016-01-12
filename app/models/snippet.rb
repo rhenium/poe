@@ -4,7 +4,7 @@ class Snippet < ApplicationRecord
   validates :code_bytes, length: { maximum: 65535 }
 
   def compilers
-    Compiler.where(language: language)
+    Compiler.where(language: language).order(version: :desc)
   end
 
   def results_all

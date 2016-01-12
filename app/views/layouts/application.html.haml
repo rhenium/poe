@@ -9,8 +9,11 @@
   %body
     %nav.navbar.navbar-default.navbar-static-top
       .container-fluid
-        .navbar-header
+        .nav.navbar-header
           %a.navbar-brand{href: "/"}= application_name
+        %ul.nav.navbar-nav.navbar-right
+          %li
+            = link_to "about", about_index_path
     .container-fluid
       = yield
     = javascript_include_tag("application")

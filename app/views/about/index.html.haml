@@ -1,0 +1,25 @@
+%h1 Poe とは
+%p
+  ぽえ（同じ言語の複数バージョンで同時にプログラムを実行できることが特徴のオンラインコンパイラみたいなやつ）
+
+%h1 しくみ
+%h2 フロントエンド
+%p
+  Ruby on Rails / MySQL / Bootstrap
+
+%h2 バックエンド
+%p
+  プログラムは Linux (x86_64) 上のサンドボックスで実行されます。
+%p
+  サンドボックスはいわゆる Linux コンテナのように動き、もろもろの namespace を分離して、chroot してさらに seccomp によって呼び出せるシステムコールを制限しています。
+  その他のリソースの制限は systemd の transient scope unit を利用しています。内部では cgroups を使ってるらしいです。
+%p
+  chroot 先は overlayfs になっていて、ベースシステム（Arch Linux べんりですね）、処理系、そして最上層に都度作られる作業ディレクトリが重ね合わされています。
+  なので、作業ディレクトリへの書き込みを許可することができるのです。うれしいですね！！ね！！
+
+%h1 処理系一覧
+- Compiler.all.group_by { |c| c.language }.each do |lang, cs|
+  %h3= lang
+  %ul
+    - cs.each do |c|
+      %li= c.version
