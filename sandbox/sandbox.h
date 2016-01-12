@@ -32,11 +32,7 @@
 #include <systemd/sd-daemon.h>
 #include <systemd/sd-event.h>
 
-#define POE_LOWERDIR "/"
 #define POE_TEMPORARY_BASE "/tmp/poe"
-#define POE_UPPERDIR_TEMPLATE POE_TEMPORARY_BASE "/upperXXXXXX"
-#define POE_WORKDIR_TEMPLATE POE_TEMPORARY_BASE "/workXXXXXX"
-#define POE_MERGEDDIR_TEMPLATE POE_TEMPORARY_BASE "/mergedXXXXXX"
 
 #define POE_USERNAME "nobody"
 #define POE_HOSTNAME "poe-sandbox"

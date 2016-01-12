@@ -1,5 +1,6 @@
 #include "sandbox.h"
 
+static char *workbase = NULL;
 static char *upperdir = NULL;
 static char *workdir = NULL;
 static char *mergeddir = NULL;
@@ -25,15 +26,22 @@ poe_init_playground(const char *base, const char *env)
         NONNEGATIVE(mkdir(POE_TEMPORARY_BASE, 0755));
     }
 
-    workdir = strdup(POE_WORKDIR_TEMPLATE);
-    if (!workdir || !mkdtemp(workdir)) ERROR("failed to create workdir");
-    NONNEGATIVE(chmod(workdir, 0755));
-    upperdir = strdup(POE_UPPERDIR_TEMPLATE);
-    if (!upperdir || !mkdtemp(upperdir)) ERROR("failed to create upperdir");
-    NONNEGATIVE(chmod(upperdir, 0755));
-    mergeddir = strdup(POE_MERGEDDIR_TEMPLATE);
-    if (!mergeddir || !mkdtemp(mergeddir)) ERROR("failed to create mergeddir");
-    NONNEGATIVE(chmod(mergeddir, 0755));
+    // setup base (tmpfs)
+    NONNEGATIVE(asprintf(&workbase, POE_TEMPORARY_BASE "/%ld", (long)getpid())); // pid_t is signed, not larger than long
+    if (stat(workbase, &s) != -1) {
+        NONNEGATIVE(rmrf(workbase));
+    }
+    NONNEGATIVE(mkdir(workbase, 0755));
+    NONNEGATIVE(mount(NULL, workbase, "tmpfs", MS_NOSUID, "size=32m")); // TODO
+
+    NONNEGATIVE(asprintf(&workdir, "%s/work", workbase));
+    NONNEGATIVE(mkdir(workdir, 0755));
+
+    NONNEGATIVE(asprintf(&upperdir, "%s/upper", workbase));
+    NONNEGATIVE(mkdir(upperdir, 0755));
+
+    NONNEGATIVE(asprintf(&mergeddir, "%s/merged", workbase));
+    NONNEGATIVE(mkdir(mergeddir, 0755));
 
     char *opts = NULL;
     NONNEGATIVE(asprintf(&opts, "lowerdir=%s:%s,upperdir=%s,workdir=%s", env, base, upperdir, workdir));
@@ -58,5 +66,10 @@ poe_destroy_playground()
     if (upperdir && stat(upperdir, &s) != -1) {
         rmrf(upperdir);
         free(upperdir);
+    }
+    if (workbase && stat(workbase, &s) != -1) {
+        umount(workbase);
+        rmrf(workbase);
+        free(workbase);
     }
 }
