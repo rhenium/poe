@@ -42,7 +42,7 @@ poe_init_systemd(pid_t pid)
         test(sd_pid_get_unit(pid, &gunit));
         bool cmp = strcmp(unit, gunit);
         free(gunit);
-        if (cmp) break;
+        if (!cmp) break;
     }
 #undef test
 }
