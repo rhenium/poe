@@ -2,3 +2,31 @@
 @import "bootstrap";
 @import "codemirror";
 @import "./*";
+
+/* disable responsive design in navbar partially */
+@media (max-width: 768px) {
+    .navbar-nav {
+        margin: 0 -15px;
+    }
+
+    .navbar-left {
+        float: left;
+    }
+
+    .navbar-right {
+        float: right;
+    }
+
+    .navbar-nav > li {
+        float: left;
+    }
+
+    .navbar-nav .dropdown-menu {
+        left: auto;
+        right: 0
+    }
+
+    .navbar-nav .open .dropdown-menu {
+        position: absolute;
+    }
+}
