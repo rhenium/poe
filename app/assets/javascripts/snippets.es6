@@ -7,6 +7,12 @@ if (codeField !== null) {
   const codeMirror = CodeMirror.fromTextArea(origTextarea, {
     mode: "ruby",
     lineNumbers: true,
+    extraKeys: {
+      "Ctrl-Enter": cm => {
+        cm.save();
+        origTextarea.form.submit();
+      }
+    }
   });
   codeMirror.on("change", cm => cm.save());
 }
@@ -20,7 +26,6 @@ const agg = (elm, n) => {
       url: "/results/" + elm.getAttribute("data-id"),
       dataType: "text",
       success: (text, st) => {
-        console.log(text);
         elm.outerHTML = text;
         if (n < 3) agg(elm, n);
       }
@@ -46,7 +51,6 @@ for (var i = 0, len = notrans.length; i < len; i++) {
     dataType: "text",
     data: { compiler_id: elm.getAttribute("data-compiler-id"), snippet_id: snippet_id },
     success: (text, st) => {
-      console.log(text);
       elm.outerHTML = text;
     }
   });
