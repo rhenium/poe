@@ -21,18 +21,18 @@ class Compiler < ApplicationRecord
   def run_body(snippet, r)
     baseroot = Rails.root.join("playground/base").to_s
     env_overlay = Rails.root.join("playground").join(language).join(version).to_s
-    sf = Tempfile.open
+    sf = Tempfile.open(encoding: Encoding::BINARY)
     sf.write(snippet.code)
     sf.fsync
-    of = Tempfile.open
-    ef = Tempfile.open
+    of = Tempfile.open(encoding: Encoding::BINARY)
+    ef = Tempfile.open(encoding: Encoding::BINARY)
     pid = spawn(Rails.root.join("sandbox/safe_runner").to_s, baseroot, env_overlay, sf.path, *Shellwords.split(command_line),
                 in: :close, # TODO
                 out: of,
                 err: ef)
     _, pst = Process.waitpid2(pid)
     ef.rewind
-    err = ef.read.force_encoding(Encoding::BINARY)
+    err = ef.read
     if pst.signaled? || pst.exitstatus > 0
       result = :errored
       status = -1
