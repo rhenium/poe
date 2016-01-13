@@ -91,6 +91,7 @@ static const struct syscall_rule syscall_rules[] = {
     RULE(getpeername,   ALLOW),
     RULE(syslog,        ERRNO(EPERM)),
     RULE(getrusage,     ALLOW),
+    RULE(select,        ALLOW),
 };
 #undef RULE
 static const int syscall_rules_count = sizeof(syscall_rules) / sizeof(struct syscall_rule);
