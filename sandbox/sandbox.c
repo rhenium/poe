@@ -152,7 +152,7 @@ sigchld_handler(sd_event_source *es, const struct signalfd_siginfo *si, void *vm
 
         if (WIFEXITED(status) && spid == mpid) {
             FINISH(POE_SUCCESS, WEXITSTATUS(status), NULL);
-        } else if (WIFSIGNALED(status)) {
+        } else if (WIFSIGNALED(status) && spid == mpid) {
             FINISH(POE_SIGNALED, -1, "Program terminated with signal %d (%s)", WTERMSIG(status), strsignal(WTERMSIG(status)));
         } else if (WIFSTOPPED(status)) {
             int e = status >> 16 & 0xff;
