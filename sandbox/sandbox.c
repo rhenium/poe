@@ -250,8 +250,8 @@ main(int argc, char *argv[])
     sigprocmask(SIG_BLOCK, &mask, &omask);
 
     int stdout_fd[2], stderr_fd[2];
-    NONNEGATIVE(pipe(stdout_fd));
-    NONNEGATIVE(pipe(stderr_fd));
+    NONNEGATIVE(pipe2(stdout_fd, O_DIRECT));
+    NONNEGATIVE(pipe2(stderr_fd, O_DIRECT));
 
     // TODO: CLONE_NEWUSER
     pid_t pid = (pid_t)syscall(SYS_clone, SIGCHLD | CLONE_NEWIPC | CLONE_NEWNS | CLONE_NEWPID | CLONE_NEWUTS | CLONE_NEWNET, 0);
