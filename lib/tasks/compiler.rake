@@ -3,34 +3,34 @@ require "tmpdir"
 require "shellwords"
 
 namespace :compiler do
-  RUBIES = {
-    "2.3.0" => "https://cache.ruby-lang.org/pub/ruby/2.3/ruby-2.3.0.tar.gz",
-    "2.2.4" => "https://cache.ruby-lang.org/pub/ruby/2.2/ruby-2.2.4.tar.gz",
-    "2.2.3" => "https://cache.ruby-lang.org/pub/ruby/2.2/ruby-2.2.3.tar.gz",
-    "2.1.8" => "https://cache.ruby-lang.org/pub/ruby/2.1/ruby-2.1.8.tar.gz",
-    "2.0.0-p648" => "https://cache.ruby-lang.org/pub/ruby/2.0/ruby-2.0.0-p648.tar.gz",
-  }
+  RUBY_MIRROR = "https://cache.ruby-lang.org/pub/ruby"
   desc "Install a ruby"
   task :ruby, :version
   task ruby: :environment do |t, args|
-    url = RUBIES[args[:version]] or raise(ArgumentError, "unknown ruby")
-    name = url.split("/").last
+    version = args[:version]
+    if version =~ /^(1\.1[a-d]|1\.[02-9]|2\..)/
+      url = "#{RUBY_MIRROR}/#{$1}/ruby-#{version}.tar.gz"
+    elsif version =~ /^0\./
+      url = "#{RUBY_MIRROR}/1.0/ruby-#{version}.tar.gz"
+    else
+      raise ArgumentError, "unknown ruby"
+    end
 
-    destdir = Rails.root.join("playground/ruby/#{args[:version]}")
+    destdir = Rails.root.join("playground/ruby/#{version}")
     raise ArgumentError, "already installed?" if Dir.exist?(destdir.to_s)
     prefix = "/opt"
 
     Dir.mktmpdir { |dir|
       FileUtils.chdir(dir) {
-        system("curl -O #{Shellwords.escape(url)}") or raise("failed to download")
-        system("tar xf #{Shellwords.escape(name)}") or raise("failed to extract")
-        FileUtils.chdir(name.split(".tar.gz").first) {
+        system("curl -o archive.tar.gz #{Shellwords.escape(url)}") or raise("failed to download")
+        system("tar xf archive.tar.gz") or raise("failed to extract")
+        FileUtils.chdir("ruby-#{version}") {
           system("./configure --prefix=#{prefix} --enable-shared --disable-install-doc") or raise("failed to configure")
           system("make -j6") or raise("failed to make")
-          system("make install DESTDIR=#{destdir.to_s}") or raise("failed to install")
+          system("make install DESTDIR=#{destdir}") or raise("failed to install")
 
           Compiler.create!(language: "ruby",
-                           version: args[:version],
+                           version: version,
                            version_long: `LD_LIBRARY_PATH=#{destdir}#{prefix}/lib #{destdir}#{prefix}/bin/ruby -v`.lines.first.chomp,
                            command_line: "#{prefix}/bin/ruby PROGRAM")
         }
