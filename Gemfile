@@ -24,4 +24,6 @@ end
 group :development do
   # gem "web-console", "~> 3.0"
   gem "quiet_assets"
+  gem "guard"
+  gem "guard-shell"
 end
