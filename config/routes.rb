@@ -1,7 +1,7 @@
 Rails.application.routes.draw do
   post "results/run" => "results#run"
   get "results/:id" => "results#show"
-  get "about/index"
+  get "about" => "about#index"
 
   resources :snippets, only: [:new, :create, :update, :show], path: "", path_names: {
     new: "",

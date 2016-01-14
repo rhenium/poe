@@ -1,3 +1,9 @@
+GIT
+  remote: git://github.com/rhenium/plum.git
+  revision: 87eef66181c9defc2d44ddd536e23b691f754b91
+  specs:
+    plum (0.2.9)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -229,6 +235,7 @@ DEPENDENCIES
   haml
   jquery-rails
   mysql2 (>= 0.3.18, < 0.5)
+  plum!
   puma
   quiet_assets
   rails (>= 5.0.0.beta1, < 5.1)

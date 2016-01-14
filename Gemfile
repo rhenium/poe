@@ -14,7 +14,7 @@ gem "jquery-rails"
 gem "bootstrap-sass"
 gem "codemirror-rails"
 
-# gem "plum"
+gem "plum", github: "rhenium/plum"
 gem "puma"
 
 group :development, :test do
