@@ -55,7 +55,6 @@ child(const char *root, char *cmd[])
     struct passwd *pw = getpwnam(POE_USERNAME);
     if (!pw) ERROR("getpwnam() failed");
 
-    NONNEGATIVE(mount(NULL, pw->pw_dir, "tmpfs", MS_NOSUID | MS_NODEV, NULL));
     NONNEGATIVE(chdir("/tmp"));
     NONNEGATIVE(setsid());
     NONNEGATIVE(initgroups(POE_USERNAME, pw->pw_gid));
