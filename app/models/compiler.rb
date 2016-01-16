@@ -19,15 +19,25 @@ class Compiler < ApplicationRecord
 
   private
   def run_body(snippet, r)
-    baseroot = Rails.root.join("playground/base").to_s
-    env_overlay = Rails.root.join("playground").join(language).join(version).to_s
     sf = Tempfile.open(encoding: Encoding::BINARY)
     sf.write(snippet.code)
     sf.fsync
     of = Tempfile.open(encoding: Encoding::BINARY)
     ef = Tempfile.open(encoding: Encoding::BINARY)
-    pid = spawn(Rails.root.join("sandbox/safe_runner").to_s, baseroot, env_overlay, sf.path, *Shellwords.split(command_line),
-                in: :close, # TODO
+    pf = Tempfile.open(encoding: Encoding::BINARY)
+
+    plan = {
+      "base" => Rails.root.join("playground/base").to_s,
+      "environment" => Rails.root.join("playground").join(language).join(version).to_s,
+      "source" => sf.path,
+      "command" => Shellwords.split(command_line)
+    }
+    pf.write(JSON.generate(plan))
+    pf.fsync
+    pf.rewind
+
+    pid = spawn(Rails.root.join("sandbox-go/bin/sandbox-run").to_s,
+                in: pf,
                 out: of,
                 err: ef)
     _, pst = Process.waitpid2(pid)
@@ -60,5 +70,7 @@ class Compiler < ApplicationRecord
   ensure
     sf.close if sf
     of.close if of
+    ef.close if ef
+    pf.close if pf
   end
 end

@@ -1,0 +1,6 @@
+{
+    "base" : "/work/poe/playground/base",
+    "environment" : "/work/poe/playground/ruby/2.3.0",
+    "source" : "plan.txt",
+    "command" : ["/usr/bin/echo", "test"]
+}
