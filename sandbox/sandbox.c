@@ -241,13 +241,6 @@ main(int argc, char *argv[])
     const char *prog = copy_program(root, argv[3]);
     char **cmdl = construct_cmdl(argc - 4, argv + 4, prog);
 
-    sigset_t mask, omask;
-    sigemptyset(&mask);
-    sigaddset(&mask, SIGCHLD);
-    sigaddset(&mask, SIGINT); // auau
-    sigaddset(&mask, SIGTERM); // auau
-    sigprocmask(SIG_BLOCK, &mask, &omask);
-
     int stdout_fd[2], stderr_fd[2];
     NONNEGATIVE(pipe2(stdout_fd, O_DIRECT));
     NONNEGATIVE(pipe2(stderr_fd, O_DIRECT));
@@ -264,7 +257,6 @@ main(int argc, char *argv[])
         close(stderr_fd[0]);
         close(stderr_fd[1]);
 
-        sigprocmask(SIG_SETMASK, &omask, NULL);
         child(root, cmdl);
     } else {
         sd_event *event = NULL;
@@ -279,6 +271,13 @@ main(int argc, char *argv[])
         fflags = fcntl(stderr_fd[0], F_GETFL, 0);
         NONNEGATIVE(fflags);
         NONNEGATIVE(fcntl(stderr_fd[0], F_SETFL, fflags | O_NONBLOCK));
+
+        sigset_t mask;
+        sigemptyset(&mask);
+        sigaddset(&mask, SIGCHLD);
+        sigaddset(&mask, SIGINT);
+        sigaddset(&mask, SIGTERM);
+        sigprocmask(SIG_BLOCK, &mask, NULL);
 
         NONNEGATIVE(sd_event_default(&event));
         NONNEGATIVE(sd_event_add_signal(event, NULL, SIGCHLD, sigchld_handler, &pid));
