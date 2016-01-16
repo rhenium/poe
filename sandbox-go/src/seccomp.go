@@ -133,5 +133,6 @@ func seccompRules() []SeccompRule {
 		{"syslog", seccomp.ActErrno.SetReturnCode(int16(syscall.EPERM))},
 		{"getrusage", seccomp.ActAllow},
 		{"select", seccomp.ActAllow},
+		{"sched_getaffinity", seccomp.ActAllow},
 	}
 }
