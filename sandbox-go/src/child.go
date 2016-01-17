@@ -115,12 +115,14 @@ func doChild(rootdir string, progfile string, plan plan, stdin_fd, stdout_fd, st
 		"LOGNAME=" + username,
 	}
 
-	cmdl := make([]string, len(plan.Command))
-	for i, arg := range plan.Command {
+	cmdl := make([]string, 0, len(plan.Compiler.Command) + len(plan.Extra) - 1)
+	for _, arg := range plan.Compiler.Command {
 		if arg == "PROGRAM" {
-			cmdl[i] = progfile
+			cmdl = append(cmdl, progfile)
+		} else if arg == "EXTRA" {
+			cmdl = append(cmdl, plan.Extra...)
 		} else {
-			cmdl[i] = arg
+			cmdl = append(cmdl, arg)
 		}
 	}
 

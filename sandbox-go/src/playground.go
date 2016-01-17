@@ -78,7 +78,8 @@ func PlaygroundDestroy() error {
 	mergeddir := basedir + "/merged"
 	syscall.Unmount(mergeddir, syscall.MNT_DETACH) // ignore error
 	syscall.Unmount(basedir, syscall.MNT_DETACH)   // ignore error
-	os.Remove(basedir)                             // ignore error
+
+	os.RemoveAll(basedir)                          // ignore error
 
 	return nil
 }

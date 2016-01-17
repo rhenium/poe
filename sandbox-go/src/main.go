@@ -9,12 +9,16 @@ import (
 	"runtime"
 	"syscall"
 )
+type compiler struct {
+	Overlay string
+	Command []string
+}
 
 type plan struct {
-	Source      string
-	Command     []string
 	Base        string
-	Environment string
+	Source      string
+	Extra []string
+	Compiler compiler
 }
 
 type poeExitReason int
@@ -66,7 +70,7 @@ func main() {
 	}
 	runtime.UnlockOSThread()
 
-	rootdir, errx := PlaygroundCreate(plan.Base, plan.Environment)
+	rootdir, errx := PlaygroundCreate(plan.Base, plan.Compiler.Overlay)
 	if errx != nil {
 		poePanic(errx, "playground_create failed")
 	}

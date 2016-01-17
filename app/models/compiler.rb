@@ -28,9 +28,12 @@ class Compiler < ApplicationRecord
 
     plan = {
       "base" => Rails.root.join("playground/base").to_s,
-      "environment" => Rails.root.join("playground").join(language).join(version).to_s,
       "source" => sf.path,
-      "command" => Shellwords.split(command_line)
+      "extra" => [],
+      "compiler" => {
+        "overlay" => Rails.root.join("playground").join(language).join(version).to_s,
+        "command" => Shellwords.split(command_line)
+      }
     }
     pf.write(JSON.generate(plan))
     pf.fsync
