@@ -9,15 +9,16 @@ import (
 	"runtime"
 	"syscall"
 )
+
 type compiler struct {
 	Overlay string
 	Command []string
 }
 
 type plan struct {
-	Base        string
-	Source      string
-	Extra []string
+	Base     string
+	Source   string
+	Extra    []string
 	Compiler compiler
 }
 
@@ -84,10 +85,10 @@ func main() {
 	if err := syscall.Pipe2(stdin_fd[:], 0); err != nil {
 		poePanic(err, "pipe2 failed")
 	}
-	if err := syscall.Pipe2(stdout_fd[:], syscall.O_DIRECT); err != nil {
+	if err := syscall.Pipe2(stdout_fd[:], syscall.O_DIRECT|syscall.O_NONBLOCK); err != nil {
 		poePanic(err, "pipe2 failed")
 	}
-	if err := syscall.Pipe2(stderr_fd[:], syscall.O_DIRECT); err != nil {
+	if err := syscall.Pipe2(stderr_fd[:], syscall.O_DIRECT|syscall.O_NONBLOCK); err != nil {
 		poePanic(err, "pipe2 failed")
 	}
 

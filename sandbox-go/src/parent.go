@@ -24,32 +24,6 @@ func doParent(mpid int, stdin_fd, stdout_fd, stderr_fd [2]int) resultPack {
 
 	exit_chan := make(chan resultPack)
 
-	for i, pfd := range []int{stdout_fd[0], stderr_fd[0]} {
-		go func(i, pfd int) {
-			if err := syscall.SetNonblock(pfd, false); err != nil {
-				poePanic(err, "failed to set nonblock mode")
-			}
-			var buf [65536]byte // TODO: pipe size?
-			for {
-				n, err := syscall.Read(pfd, buf[:])
-				if err != nil {
-					return // closed?
-				}
-				if n > 0 {
-					var outbuf bytes.Buffer
-					binary.Write(&outbuf, binary.LittleEndian, int32(i+1))
-					binary.Write(&outbuf, binary.LittleEndian, int32(n))
-					if _, err := os.Stdout.Write(outbuf.Bytes()); err != nil {
-						poePanic(err, "stdout write failed")
-					}
-					if _, err := os.Stdout.Write(buf[:n]); err != nil {
-						poePanic(err, "stdout write failed")
-					}
-				}
-			}
-		}(i, pfd)
-	}
-
 	if err := SetupScope(uint32(mpid)); err != nil {
 		poePanic(err, "setup systemd scope unit failed")
 	}
@@ -75,6 +49,63 @@ func doParent(mpid int, stdin_fd, stdout_fd, stderr_fd [2]int) resultPack {
 				}
 			case syscall.SIGTERM, syscall.SIGINT:
 				exit_chan <- resultPack{POE_TIMEDOUT, -1, "Supervisor terminated"}
+			}
+		}
+	}()
+
+	// TODO: output order is not preserved
+	out_chan := make(chan childOutput, 1)
+	go func() {
+		epfd, err := syscall.EpollCreate1(0)
+		if err != nil {
+			poePanic(err, "epoll_create1 failed")
+		}
+		defer syscall.Close(epfd)
+
+		event1 := syscall.EpollEvent{Events: syscall.EPOLLIN, Fd: int32(stdout_fd[0]), Pad: 1} // Fd/Pad is epoll_data_t (userdata)
+		if err := syscall.EpollCtl(epfd, syscall.EPOLL_CTL_ADD, stdout_fd[0], &event1); err != nil {
+			poePanic(err, "epoll_ctl (EPOLL_CTL_ADD) failed")
+		}
+		event2 := syscall.EpollEvent{Events: syscall.EPOLLIN, Fd: int32(stderr_fd[0]), Pad: 2}
+		if err := syscall.EpollCtl(epfd, syscall.EPOLL_CTL_ADD, stderr_fd[0], &event2); err != nil {
+			poePanic(err, "epoll_ctl (EPOLL_CTL_ADD) failed")
+		}
+
+		var events [32]syscall.EpollEvent
+		for {
+			en, err := syscall.EpollWait(epfd, events[:], -1)
+			if err != nil {
+				poePanic(err, "epoll_wait failed")
+			}
+
+			var buf [1024]byte // TODO: pipe size?
+			for ev := 0; ev < en; ev++ {
+				for {
+					n, err := syscall.Read(int(events[ev].Fd), buf[:])
+					if err != nil {
+						break
+					}
+					if n > 0 {
+						nbuf := make([]byte, n)
+						copy(nbuf, buf[:n])
+						out_chan <- childOutput{int(events[ev].Pad), n, nbuf}
+					}
+				}
+			}
+		}
+	}()
+
+	go func() {
+		for {
+			out := <-out_chan
+			var outbuf bytes.Buffer
+			binary.Write(&outbuf, binary.LittleEndian, int32(out.fd))
+			binary.Write(&outbuf, binary.LittleEndian, int32(out.n))
+			if _, err := os.Stdout.Write(outbuf.Bytes()); err != nil {
+				poePanic(err, "stdout write failed")
+			}
+			if _, err := os.Stdout.Write(out.buf); err != nil {
+				poePanic(err, "stdout write failed")
 			}
 		}
 	}()

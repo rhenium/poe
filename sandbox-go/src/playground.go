@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"io"
+	"os"
 	"strconv"
 	"syscall"
 )
@@ -79,7 +79,7 @@ func PlaygroundDestroy() error {
 	syscall.Unmount(mergeddir, syscall.MNT_DETACH) // ignore error
 	syscall.Unmount(basedir, syscall.MNT_DETACH)   // ignore error
 
-	os.RemoveAll(basedir)                          // ignore error
+	os.RemoveAll(basedir) // ignore error
 
 	return nil
 }
