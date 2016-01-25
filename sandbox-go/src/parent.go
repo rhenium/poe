@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"encoding/binary"
-	"unsafe"
 	"fmt"
 	"os"
 	"os/signal"
@@ -82,12 +81,11 @@ func doParent(mpid int, stdin_fd, stdout_fd, stderr_fd [2]int) resultPack {
 			var buf [65536]byte // TODO: how to get PIPE_BUF?
 			for ev := 0; ev < en; ev++ {
 				for {
-					r1, _, e1 := syscall.Syscall(syscall.SYS_READ, uintptr(events[ev].Fd), uintptr(unsafe.Pointer(&buf[0])), uintptr(len(buf)))
-					if e1 != 0 {
+					n, err := syscall.Read(int(events[ev].Fd), buf[:])
+					if err != nil {
 						break
 					}
-					n := int(r1)
-					if r1 > 0 {
+					if n > 0 {
 						nbuf := make([]byte, n)
 						copy(nbuf, buf[:n])
 						out_chan <- childOutput{int(events[ev].Pad), n, nbuf}

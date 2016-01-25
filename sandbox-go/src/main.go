@@ -54,7 +54,7 @@ func cleanup() {
 }
 
 func main() {
-	runtime.GOMAXPROCS(3)
+	runtime.GOMAXPROCS(8)
 	dec := json.NewDecoder(os.Stdin)
 	var plan plan
 	if err := dec.Decode(&plan); err != nil {
@@ -85,10 +85,10 @@ func main() {
 	if err := syscall.Pipe2(stdin_fd[:], 0); err != nil {
 		poePanic(err, "pipe2 failed")
 	}
-	if err := syscall.Pipe2(stdout_fd[:], syscall.O_DIRECT|syscall.O_NONBLOCK); err != nil {
+	if err := syscall.Pipe2(stdout_fd[:], syscall.O_DIRECT); err != nil {
 		poePanic(err, "pipe2 failed")
 	}
-	if err := syscall.Pipe2(stderr_fd[:], syscall.O_DIRECT|syscall.O_NONBLOCK); err != nil {
+	if err := syscall.Pipe2(stderr_fd[:], syscall.O_DIRECT); err != nil {
 		poePanic(err, "pipe2 failed")
 	}
 
