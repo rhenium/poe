@@ -47,7 +47,14 @@ impl Snippet {
         Ok(Snippet { id: id.to_string(), metadata: try!(json::decode(&encoded)) })
     }
 
-    // クライアントに出力するときだけ使うので ToJson trait を実装するのはアレな気がする
+    pub fn code_file(&self) -> String {
+        self.basedir() + "/code"
+    }
+
+    pub fn basedir(&self) -> String {
+        config::datadir() + "/snippets/" + &self.id
+    }
+
     pub fn render(&self) -> Json {
         let mut map = BTreeMap::new();
         map.insert("id".to_string(), self.id.to_json());
@@ -58,25 +65,16 @@ impl Snippet {
         Json::Object(map)
     }
 
-    fn render_results(&self) -> Json {
-        config::compilers(&self.metadata.lang).unwrap().iter().map(|kv| {
-            run_result::open_render(&self, &kv.1)
-        }).collect::<Vec<_>>().to_json()
-    }
-
-    pub fn code_file(&self) -> String {
-        self.basedir() + "/code"
-    }
-
-    pub fn basedir(&self) -> String {
-        config::datadir() + "/snippets/" + &self.id
-    }
-
     fn read_code(&self) -> String {
         let mut codefile = fs::File::open(config::datadir() + "/snippets/" + &self.id + "/code").unwrap();
         let mut code = String::new();
         codefile.read_to_string(&mut code).unwrap();
         code
     }
-}
 
+    fn render_results(&self) -> Json {
+        config::compilers(&self.metadata.lang).unwrap().iter().map(|kv| {
+            run_result::open_render(&self, &kv.1)
+        }).collect::<Vec<_>>().to_json()
+    }
+}

@@ -10,6 +10,7 @@ extern crate rustc_serialize;
 
 use iron::prelude::*;
 use iron::{AfterMiddleware, status};
+use iron::modifier::Modifier;
 use router::Router;
 use rustc_serialize::json::ToJson;
 use std::io::Read;
@@ -28,6 +29,12 @@ mod compiler;
 mod run_result;
 use snippet::Snippet;
 
+impl Modifier<Response> for Snippet {
+    fn modify(self, resp: &mut Response) {
+        self.render().to_string().modify(resp);
+    }
+}
+
 fn snippet_create(req: &mut Request) -> IronResult<Response> {
     let mut body = String::new();
     let form = try!(req.body.read_to_string(&mut body)
@@ -38,7 +45,7 @@ fn snippet_create(req: &mut Request) -> IronResult<Response> {
         (Some(lang_), Some(code)) => {
             let lang = lang_.to_ascii_lowercase();
             match Snippet::create(&lang, &code) {
-                Ok(snip) => Ok(Response::with((status::Created, snip.render().to_string()))),
+                Ok(snip) => Ok(Response::with((status::Created, snip))),
                 Err(e) => Err(RequestError::InternalError(e).into())
             }
         },
@@ -51,7 +58,7 @@ fn snippet_show(req: &mut Request) -> IronResult<Response> {
     let osnip = router.find("snippet_id").and_then(|sid| Snippet::find(sid).ok());
 
     match osnip {
-        Some(snip) => Ok(Response::with((status::Ok, snip.render().to_string()))),
+        Some(snip) => Ok(Response::with((status::Ok, snip))),
         None => Ok(Response::with((status::NotFound)))
     }
 }
