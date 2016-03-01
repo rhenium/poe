@@ -6,17 +6,15 @@ use iron;
 
 #[derive(Debug)]
 pub enum PoeError {
-    IOError(io::Error),
-    JSONError(json::DecoderError),
-    Message(String),
+    NotFound,
+    Unknown(String),
 }
 
 impl fmt::Display for PoeError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            PoeError::IOError(ref e) => write!(f, "std::io error: {}", e),
-            PoeError::JSONError(ref e) => write!(f, "json error: {}", e),
-            PoeError::Message(ref s) => write!(f, "mount error: {}", s),
+            PoeError::NotFound => write!(f, "not found"),
+            PoeError::Unknown(ref s) => write!(f, "error: {}", s),
         }
     }
 }
@@ -24,34 +22,33 @@ impl fmt::Display for PoeError {
 impl Error for PoeError {
     fn description(&self) -> &str {
         match *self {
-            PoeError::IOError(ref e) => e.description(),
-            PoeError::JSONError(ref e) => e.description(),
-            PoeError::Message(ref s) => s,
+            PoeError::NotFound => "not found",
+            PoeError::Unknown(ref s) => s,
         }
     }
 }
 
 impl From<io::Error> for PoeError {
     fn from(e: io::Error) -> Self {
-        PoeError::IOError(e)
-    }
-}
-
-impl From<String> for PoeError {
-    fn from(s: String) -> Self {
-        PoeError::Message(s)
-    }
-}
-
-impl From<&'static str> for PoeError {
-    fn from(s: &'static str) -> Self {
-        PoeError::Message(s.to_string())
+        PoeError::Unknown(e.description().to_string())
     }
 }
 
 impl From<json::DecoderError> for PoeError {
     fn from(e: json::DecoderError) -> Self {
-        PoeError::JSONError(e)
+        PoeError::Unknown(e.description().to_string())
+    }
+}
+
+impl From<String> for PoeError {
+    fn from(s: String) -> Self {
+        PoeError::Unknown(s)
+    }
+}
+
+impl<'a> From<&'a str> for PoeError {
+    fn from(s: &'a str) -> Self {
+        PoeError::Unknown(s.to_string())
     }
 }
 
@@ -95,6 +92,15 @@ impl From<RequestError> for iron::error::IronError {
 
 impl From<PoeError> for RequestError {
     fn from(e: PoeError) -> Self {
-        RequestError::InternalError(e)
+        match e {
+            PoeError::NotFound => RequestError::NotFound,
+            _ => RequestError::InternalError(e),
+        }
+    }
+}
+
+impl From<PoeError> for iron::error::IronError {
+    fn from(e: PoeError) -> Self {
+        RequestError::from(e).into()
     }
 }

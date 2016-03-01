@@ -22,7 +22,7 @@ pub struct Snippet {
 impl Snippet {
     pub fn create(lang: &str, code: &str) -> Result<Snippet, PoeError> {
         if config::compilers(&lang).is_none() {
-            return Err(PoeError::from("unknown lang"));
+            return Err(PoeError::NotFound);
         }
         let id = uuid::Uuid::new_v4().to_simple_string();
         let created = time::now_utc().to_timespec().sec;
@@ -41,7 +41,8 @@ impl Snippet {
     }
 
     pub fn find(id: &str) -> Result<Snippet, PoeError> {
-        let mut metafile = try!(fs::File::open(config::datadir() + "/snippets/" + &id + "/metadata.json"));
+        let mut metafile = try!(fs::File::open(config::datadir() + "/snippets/" + &id + "/metadata.json")
+                                .map_err(|_|PoeError::NotFound));
         let mut encoded = String::new();
         try!(metafile.read_to_string(&mut encoded));
         Ok(Snippet { id: id.to_string(), metadata: try!(json::decode(&encoded)) })
