@@ -1,6 +1,5 @@
 #![feature(plugin)]
 #![feature(custom_derive)]
-#![plugin(serde_macros)]
 
 extern crate byteorder;
 extern crate num;
@@ -8,8 +7,6 @@ extern crate iron;
 extern crate mount;
 extern crate staticfile;
 extern crate router;
-extern crate serde;
-extern crate serde_json;
 extern crate hyper;
 extern crate uuid;
 extern crate time;
