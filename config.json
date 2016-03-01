@@ -1,7 +1,6 @@
 {
   "datadir": "/work/poe/data",
   "runner": "/work/poe/sandbox/runner",
-  "staticroot": "/work/poe/frontend",
   "compilers": {
     "ruby": {
       "ruby-2.3.0": {
