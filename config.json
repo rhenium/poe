@@ -1,0 +1,31 @@
+{
+  "datadir": "/work/poe/data",
+  "runner": "/work/poe/sandbox/runner",
+  "compilers": {
+    "ruby": {
+      "ruby-2.3.0": {
+        "version": "ruby 2.3.0p0 (2015-12-25 revision 53290) [x86_64-linux]",
+        "commandline": [
+          "/opt/bin/ruby",
+          "{}"
+        ]
+      },
+      "ruby-2.2.4": {
+        "version": "ruby 2.2.4p230 (2015-12-16 revision 53155) [x86_64-linux]",
+        "commandline": [
+          "/opt/bin/ruby",
+          "{}"
+        ]
+      }
+    },
+    "php": {
+      "php-7.0.3": {
+        "version": "PHP 7.0.3 (cli) (built: Mar  1 2016 00:37:44) ( NTS )",
+        "commandline": [
+          "/opt/bin/php",
+          "{}"
+        ]
+      }
+    }
+  }
+}

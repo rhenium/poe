@@ -1,4 +1,0 @@
-= render "form", snippet: @snippet
-%span#snippet-id{style: "display: none"}= @snippet.id
-- @snippet.results_all.each do |result, compiler|
-  = render partial: "results/result", locals: { result: result, compiler: compiler }

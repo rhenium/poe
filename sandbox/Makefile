@@ -1,8 +1,16 @@
-CFLAGS += -std=c11 -D_GNU_SOURCE -D_FORTIFY_SOURCE=2 -ggdb3 -O3 -fPIE -fstack-protector-all \
-	  -Wall -Wextra -Wshadow -Wmissing-declarations -Wpointer-arith 
-LDLIBS = -lseccomp -lsystemd
-LDFLAGS += -pie -Wl,-z,relro,-z,now
+CFLAGS ?= -std=c11 -g -O3 -D_GNU_SOURCE -D_FORTIFY_SOURCE=2 -fPIE -fstack-protector-all \
+	  -Wall -Wextra -Wpedantic -Wshadow -Wmissing-declarations -Wpointer-arith -Wunused-macros
+LDFLAGS ?= -pie -Wl,-z,relro,-z,now -lseccomp -lsystemd -ljansson
 
-sandbox: sandbox.c seccomp.c playground.c systemd.c
+OBJS := main.o playground.o seccomp.o systemd.o
+DEPS := config.h
+
+%.o: %.c $(DEPS)
+	$(CC) -c -o $@ $< $(CFLAGS)
+sandbox: $(OBJS)
+	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
 install: sandbox
-	install -m 6755 -o root sandbox safe_runner
+	install -m 6755 -o root sandbox runner
+clean:
+	$(RM) runner sandbox
+	$(RM) *.o

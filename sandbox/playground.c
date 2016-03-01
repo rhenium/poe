@@ -27,7 +27,7 @@ poe_init_playground(const char *base, const char *env)
     }
 
     // setup base (tmpfs)
-    NONNEGATIVE(asprintf(&workbase, POE_TEMPORARY_BASE "/%ld", (long)getpid())); // pid_t is signed, not larger than long
+    NONNEGATIVE(asprintf(&workbase, POE_TEMPORARY_BASE "/%ld", (long)getpid()));
     if (stat(workbase, &s) != -1) {
         NONNEGATIVE(rmrf(workbase));
     }
@@ -49,6 +49,35 @@ poe_init_playground(const char *base, const char *env)
 
     return mergeddir;
 }
+
+char *
+poe_copy_program_to_playground(const char *root, const char *progpath)
+{
+    FILE *src = fopen(progpath, "rb");
+    if (!src) ERROR("could not open src");
+
+    char *newrel = "/tmp/prog";
+    char * fullpath = (char *)malloc(strlen(root) + strlen(newrel) + 1);
+    NONNULL(fullpath);
+    strcpy(fullpath, root);
+    strcat(fullpath, newrel);
+
+    FILE *dst = fopen(fullpath, "wb");
+    if (!dst) ERROR("could not open dst");
+
+    char buf[1024];
+    int n;
+    while ((n = fread(buf, sizeof(buf[0]), sizeof(buf), src)) > 0) {
+        if (!fwrite(buf, sizeof(buf[0]), n, dst)) ERROR("failed fwrite");
+    }
+
+    fclose(dst);
+    fclose(src);
+    chmod(fullpath, 0644);
+
+    return newrel;
+}
+
 
 void
 poe_destroy_playground()

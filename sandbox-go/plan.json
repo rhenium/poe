@@ -1,9 +1,0 @@
-{
-    "base" : "/work/poe/playground/base",
-    "source" : "plan.json",
-    "extra" : ["-v"],
-    "compiler" : {
-        "overlay" : "/work/poe/playground/ruby/2.3.0",
-        "command" : ["/opt/bin/ruby", "EXTRA", "PROGRAM"]
-    }
-}

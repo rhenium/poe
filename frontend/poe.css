@@ -1,0 +1,44 @@
+.navbar > .container-fluid {
+  padding: 0 30px;
+}
+
+/* disable responsive design in navbar partially */
+@media (max-width: 768px) {
+  .navbar-nav {
+    margin: 0 -15px;
+
+    li > a {
+      padding-top: 15px;
+      padding-bottom: 15px;
+    }
+  }
+
+  .navbar-left {
+    float: left;
+  }
+
+  .navbar-right {
+    float: right;
+  }
+
+  .navbar-nav > li {
+    float: left;
+  }
+}
+
+
+.result-exit {
+  color: orange;
+}
+
+.result-info {
+  color: white;
+  background-color: black;
+}
+
+.result-fd-1 {
+}
+
+.result-fd-2 {
+  color: red;
+}

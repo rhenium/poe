@@ -1,24 +1,15 @@
-## README
+# poe: online [ruby] environment
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+sandbox (C):
 
-Things you may want to cover:
+* seccomp: to restrict syscallls
+* systemd: to restrict resources
+* overlayfs
 
-* Ruby version
+backend (Rust):
 
-* System dependencies
+* Iron: webapp framework
 
-* Configuration
+frontend (TypeScript):
 
-* Database creation
-
-* Database initialization
-
-* How to run the test suite
-
-* Services (job queues, cache servers, search engines, etc.)
-
-* Deployment instructions
-
-* ...
+* Angular 2
