@@ -27,7 +27,7 @@ pub fn open_render(snip: &Snippet, comp: &Compiler) -> Json {
             let meta: RunResultMetadata = json::decode(&encoded).unwrap();
             map.insert("exit".to_string(), meta.exit.to_json());
             map.insert("result".to_string(), meta.result.to_json());
-            let (out, truncated) = read_output(&snip, &comp);
+            let (out, truncated) = read_output_str(&snip, &comp);
             map.insert("output".to_string(), out.to_json());
             map.insert("truncated".to_string(), truncated.to_json());
         },
@@ -39,15 +39,34 @@ pub fn open_render(snip: &Snippet, comp: &Compiler) -> Json {
     Json::Object(map)
 }
 
-fn read_output(snip: &Snippet, comp: &Compiler) -> (Vec<(u8, String)>, bool) {
-    let f = |out: &mut Vec<(u8, String)>| {
+pub fn read_stdout_raw(snip: &Snippet, comp: &Compiler) -> Vec<u8> {
+    let mut out = vec![];
+    let (raw_out, _trunc) = read_output_raw(&snip, &comp);
+    for (fd, raw) in raw_out {
+        if fd == 1 {
+            out.extend_from_slice(&raw); // TODO: this copies
+        }
+    }
+    out
+}
+
+fn read_output_str(snip: &Snippet, comp: &Compiler) -> (Vec<(u8, String)>, bool) {
+    let (raw_out, trunc) = read_output_raw(&snip, &comp);
+    let new_out = raw_out.iter().map(|pair| {
+        (pair.0, String::from_utf8_lossy(&pair.1).into_owned())
+    }).collect();
+    (new_out, trunc)
+}
+
+fn read_output_raw(snip: &Snippet, comp: &Compiler) -> (Vec<(u8, Vec<u8>)>, bool) {
+    let f = |out: &mut Vec<(u8, Vec<u8>)>| {
         let mut out_file = stry!(fs::File::open(format!("{}/results/{}.output", &snip.basedir(), &comp.id)));
         while let Ok(fd) = out_file.read_u8() {
             let len = stry!(out_file.read_u32::<LittleEndian>());
             if len > 1024 * 1024 { return Err("broken input?".to_string()); } // TODO
             let mut body = vec![0; len as usize];
             stry!(out_file.read_exact(&mut body));
-            out.push((fd, String::from_utf8_lossy(&body).into_owned()));
+            out.push((fd, body));
         }
         Ok(())
     };

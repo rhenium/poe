@@ -73,6 +73,19 @@ fn snippet_run(req: &mut Request) -> IronResult<Response> {
     }
 }
 
+fn results_stdout(req: &mut Request) -> IronResult<Response> {
+    let router = req.extensions.get::<Router>().unwrap();
+    match (router.find("sid"), router.find(":cid")) {
+        (Some(sid), Some(cid)) => {
+            let snip = try!(Snippet::find(sid));
+            let comp = try!(config::compiler(&snip.metadata.lang, cid).ok_or(RequestError::NotFound));
+            let stdout = run_result::read_stdout_raw(&snip, &comp);
+            Ok(Response::with((status::Ok, stdout)))
+        },
+        _ => Err(RequestError::BadRequest.into())
+    }
+}
+
 struct Recoverer;
 impl AfterMiddleware for Recoverer {
     fn catch(&self, _: &mut Request, err: IronError) -> IronResult<Response> {
@@ -94,6 +107,7 @@ fn main() {
     router.get("/api/snippet/:sid", snippet_show);
     router.post("/api/snippet/new", snippet_create);
     router.post("/api/snippet/run", snippet_run);
+    router.get("/api/snippet/:sid/:cid/stdout", results_stdout);
 
     let mut middleware = Chain::new(router);
     middleware.link_after(Recoverer);
