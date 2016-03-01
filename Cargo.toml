@@ -9,7 +9,7 @@ default = []
 [dependencies]
 iron = "*"
 router = "*"
-rustc-serialize = { git = "https://github.com/rust-lang-nursery/rustc-serialize.git" }
+rustc-serialize = "*"
 rust-crypto = "*"
 uuid = "*"
 time = "*"
