@@ -10,11 +10,7 @@ default = []
 iron = "*"
 router = "*"
 rustc-serialize = { git = "https://github.com/rust-lang-nursery/rustc-serialize.git" }
-libc = "*"
-tempfile = "*"
-hyper = "*"
 rust-crypto = "*"
 uuid = "*"
 time = "*"
 byteorder = "*"
-num = "*"

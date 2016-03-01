@@ -2,10 +2,8 @@
 #![feature(custom_derive)]
 
 extern crate byteorder;
-extern crate num;
 extern crate iron;
 extern crate router;
-extern crate hyper;
 extern crate uuid;
 extern crate time;
 extern crate rustc_serialize;
