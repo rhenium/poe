@@ -1,19 +1,10 @@
-use rustc_serialize::json::{self, ToJson, Json};
+use rustc_serialize::json::{ToJson, Json};
 use std::collections::BTreeMap;
-use std::io::Cursor;
-use byteorder::{ReadBytesExt, WriteBytesExt, BigEndian, LittleEndian};
 use std::process::Command;
-use std::fs;
-use time;
-use uuid;
 use error::PoeError;
-use std::io::{Read, Write};
 use config;
-use std::collections::HashSet;
-use std::iter::FromIterator;
 use run_result;
 use snippet::Snippet;
-use std::env;
 
 pub struct Compiler {
     pub id: String,

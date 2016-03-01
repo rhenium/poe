@@ -9,8 +9,6 @@ default = []
 [dependencies]
 iron = "*"
 router = "*"
-mount = "*"
-staticfile = "*"
 rustc-serialize = { git = "https://github.com/rust-lang-nursery/rustc-serialize.git" }
 libc = "*"
 tempfile = "*"

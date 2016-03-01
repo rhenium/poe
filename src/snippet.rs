@@ -1,10 +1,4 @@
-use num;
-use std::io::Cursor;
-use byteorder::{ReadBytesExt, WriteBytesExt, BigEndian, LittleEndian};
-use compiler::Compiler;
-use std::process::Output;
 use rustc_serialize::json::{self, ToJson, Json};
-use rustc_serialize::base64::{self, ToBase64};
 use std::collections::BTreeMap;
 use std::fs;
 use time;
@@ -13,10 +7,8 @@ use error::PoeError;
 use std::io::{Read, Write};
 use run_result;
 use config;
-use std::collections::HashSet;
-use std::iter::FromIterator;
 
-#[derive(Serialize, Deserialize, RustcDecodable, RustcEncodable, Debug)]
+#[derive(RustcDecodable, RustcEncodable, Debug)]
 pub struct SnippetMetadata {
     pub lang: String,
     pub created: i64,
@@ -35,14 +27,8 @@ impl Snippet {
         let id = uuid::Uuid::new_v4().to_simple_string();
         let created = time::now_utc().to_timespec().sec;
 
-        let snip_meta = SnippetMetadata {
-            lang: lang.to_string(),
-            created: created,
-        };
-        let snip = Snippet {
-            id: id,
-            metadata: snip_meta,
-        };
+        let snip_meta = SnippetMetadata { lang: lang.to_string(), created: created };
+        let snip = Snippet { id: id, metadata: snip_meta };
 
         try!(fs::create_dir(snip.basedir()));
         try!(fs::create_dir(snip.basedir() + "/results"));
@@ -55,17 +41,13 @@ impl Snippet {
     }
 
     pub fn find(id: &str) -> Result<Snippet, PoeError> {
-        let mut metafile = try!(fs::File::open(config::datadir() + "/snippets/" + &id +
-                                               "/metadata.json"));
+        let mut metafile = try!(fs::File::open(config::datadir() + "/snippets/" + &id + "/metadata.json"));
         let mut encoded = String::new();
         try!(metafile.read_to_string(&mut encoded));
-        Ok(Snippet {
-            id: id.to_string(),
-            metadata: try!(json::decode(&encoded)),
-        })
+        Ok(Snippet { id: id.to_string(), metadata: try!(json::decode(&encoded)) })
     }
 
-    // ToJson を実装するのはアレな気がする
+    // クライアントに出力するときだけ使うので ToJson trait を実装するのはアレな気がする
     pub fn render(&self) -> Json {
         let mut map = BTreeMap::new();
         map.insert("id".to_string(), self.id.to_json());
@@ -77,7 +59,9 @@ impl Snippet {
     }
 
     fn render_results(&self) -> Json {
-        config::compilers(&self.metadata.lang).unwrap().iter().map(|kv| run_result::open_render(&self, &kv.1)).collect::<Vec<_>>().to_json()
+        config::compilers(&self.metadata.lang).unwrap().iter().map(|kv| {
+            run_result::open_render(&self, &kv.1)
+        }).collect::<Vec<_>>().to_json()
     }
 
     pub fn code_file(&self) -> String {
@@ -89,10 +73,10 @@ impl Snippet {
     }
 
     fn read_code(&self) -> String {
-        let mut codefile = fs::File::open(config::datadir() + "/snippets/" + &self.id + "/code")
-                               .unwrap();
+        let mut codefile = fs::File::open(config::datadir() + "/snippets/" + &self.id + "/code").unwrap();
         let mut code = String::new();
         codefile.read_to_string(&mut code).unwrap();
         code
     }
 }
+

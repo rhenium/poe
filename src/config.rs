@@ -1,4 +1,4 @@
-use rustc_serialize::json::{self, Json};
+use rustc_serialize::json::{Json};
 use std::iter::FromIterator;
 use std::fs;
 use std::io::Read;

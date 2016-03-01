@@ -4,8 +4,6 @@
 extern crate byteorder;
 extern crate num;
 extern crate iron;
-extern crate mount;
-extern crate staticfile;
 extern crate router;
 extern crate hyper;
 extern crate uuid;
@@ -13,22 +11,14 @@ extern crate time;
 extern crate rustc_serialize;
 
 use iron::prelude::*;
-use iron::{status, headers, modifiers};
-use iron::{BeforeMiddleware, AfterMiddleware, typemap};
-use mount::Mount;
-use staticfile::Static;
+use iron::{AfterMiddleware, status};
 use router::Router;
-use rustc_serialize::json::{self, ToJson, Json};
-use std::collections::HashMap;
-use std::io::{Read,Write};
-use std::iter::FromIterator;
+use rustc_serialize::json::ToJson;
+use std::io::Read;
 
-use std::env;
 use std::net::*;
-use std::path::Path;
 use std::collections::BTreeMap;
 use std::ascii::AsciiExt;
-use std::error::Error;
 
 mod error;
 use error::PoeError;
@@ -39,7 +29,6 @@ mod snippet;
 mod compiler;
 mod run_result;
 use snippet::Snippet;
-use compiler::Compiler;
 
 fn snippet_create(req: &mut Request) -> IronResult<Response> {
     let mut body = String::new();
@@ -91,9 +80,9 @@ impl AfterMiddleware for Recoverer {
     fn catch(&self, _: &mut Request, err: IronError) -> IronResult<Response> {
         match err.response.status {
             Some(st) => {
-                let mut data = BTreeMap::<String, _>::new();
+                let mut data = BTreeMap::new();
                 data.insert("error".into(), err.to_string());
-                Ok(Response::with((st, json::encode(&data).unwrap())))
+                Ok(Response::with((st, data.to_json().to_string())))
             },
             _ => Err(err)
         }
@@ -108,11 +97,7 @@ fn main() {
     router.post("/api/snippet/new", snippet_create);
     router.post("/api/snippet/run", snippet_run);
 
-    let mut mount = Mount::new();
-    mount.mount("/", router);
-    mount.mount("/static", Static::new(Path::new("./static/")));
-
-    let mut middleware = Chain::new(mount);
+    let mut middleware = Chain::new(router);
     middleware.link_after(Recoverer);
 
     let host = SocketAddrV4::new(Ipv4Addr::new(127, 0, 0, 1), 3000);
