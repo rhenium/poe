@@ -1,64 +1,61 @@
 import {Component, OnInit, ElementRef, Input, Output, EventEmitter} from "angular2/core";
 import {EditingData, EditingDataService} from "./editing-data.service";
-import CodeMirror from "codemirror";
-import "codemirror/mode/ruby/ruby";
-import "codemirror/mode/php/php";
-import "codemirror/mode/htmlmixed/htmlmixed";
-import "codemirror/mode/xml/xml";
-import "codemirror/mode/css/css";
-import "codemirror/mode/clike/clike";
-import "codemirror/mode/javascript/javascript";
-import "codemirror/addon/edit/closebrackets";
-import "codemirror/addon/edit/matchbrackets";
+import "ace/ace";
 
 @Component({
   selector: "editor",
   template: `
-    <textarea></textarea>
+    <div style.height="300px"></div>
   `,
 })
 export class EditorComponent implements OnInit {
   private _mode: string;
   @Input() set mode(val: string) {
     this._mode = val;
-    if (this.cm) {
-      this.cm.setOption("mode", val);
+    if (this.editor) {
+      let session = this.editor.getSession();
+      session.setMode("ace/mode/" + val);
     }
   }
   private _value: string;
   @Input() set value(val: string) {
     if (this._value !== val) {
       this._value = val;
-      if (this.cm) {
-        this.cm.getDoc().setValue(val);
+      if (this.editor) {
+        this.editor.setValue(val);
+        this.editor.clearSelection();
       }
     }
   }
   @Output() valueChange = new EventEmitter();
   @Output() onSubmit = new EventEmitter();
 
-  private cm: CodeMirror.EditorFromTextArea;
+  private editor: AceAjax.Editor;
 
   constructor(
     private elementRef: ElementRef) { }
 
   ngOnInit() {
-    if (!this.cm) {
+    if (!this.editor) {
       const elm = this.elementRef.nativeElement;
-      const origTextarea = <HTMLTextAreaElement>elm.querySelector("textarea");
-      this.cm = CodeMirror.fromTextArea(origTextarea, {
-        mode: this._mode,
-        lineNumbers: true,
-        value: this._value,
-        extraKeys: {
-          "Ctrl-Enter": cm => this.onSubmit.emit(this._value),
-        }
+      const div = elm.querySelector("div");
+      this.editor = ace.edit(div);
+      this.editor.setOptions({
+        maxLines: Infinity,
+        minLines: 10,
       });
-      this.cm.on("change", cm => {
-        this.cm.save();
-        if (this._value !== origTextarea.value) {
-          this._value = origTextarea.value;
-          this.valueChange.emit(this._value);
+      this.mode = this._mode;
+      this.editor.commands.addCommand({
+        name: "run",
+        bindKey: { win: "Ctrl-Enter", mac: "Command-Enter" },
+        exec: e => this.onSubmit.emit(this),
+      });
+
+      this.editor.addEventListener("change", e => {
+        let s = this.editor.getValue();
+        if (this._value !== s) {
+          this._value = s;
+          this.valueChange.emit(s);
         }
       });
     }

@@ -9,6 +9,7 @@ var xcb = function() {
     defaultJSExtensions: true,
     paths: {
       "*": "./node_modules/*",
+      "ace/*": "./node_modules/ace-builds/src/*",
       "app/*": "./app/*",
     },
     bundles: {
@@ -18,6 +19,12 @@ var xcb = function() {
       "rxjs/bundles/Rx": ["rxjs/*"],
     },
     packageConfigPaths: ["./node_modules/*/package.json"],
+    meta: {
+      "ace-builds/src/ace.js": {
+        format: "global",
+        exports: "ace",
+      }
+    }
   });
 }
 

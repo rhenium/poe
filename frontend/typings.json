@@ -1,6 +1,6 @@
 {
     "ambientDependencies": {
-        "codemirror": "github:DefinitelyTyped/DefinitelyTyped/codemirror/codemirror.d.ts#4de74cb527395c13ba20b438c3a7a419ad931f1c",
+        "ace": "github:DefinitelyTyped/DefinitelyTyped/ace/ace.d.ts#2f7fb157a8482a8efa1a50e724b27bf8736eb379",
         "es6-shim": "github:DefinitelyTyped/DefinitelyTyped/es6-shim/es6-shim.d.ts#6697d6f7dadbf5773cb40ecda35a76027e0783b2"
     }
 }
