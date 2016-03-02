@@ -40,7 +40,7 @@ export class SnippetDetailComponent implements OnInit {
   formatted_output(r: Result): string {
     if (this.isRunning(r)) return "Running...";
     if (r._) return r._;
-    let haveNewLine = false
+    let haveNewLine = false;
     let str = r.output.reduce((str, pair) => {
       let fd = pair[0];
       let escaped = this.escapeHTML(pair[1]);
