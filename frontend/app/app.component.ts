@@ -1,6 +1,5 @@
 import {Component} from "angular2/core";
 import {Router, RouteParams} from "angular2/router";
-import {NgForm}    from 'angular2/common';
 import {RouteConfig, ROUTER_DIRECTIVES} from "angular2/router";
 import {HTTP_PROVIDERS} from 'angular2/http';
 
@@ -14,7 +13,6 @@ import {EditorComponent} from "./editor.component";
 @Component({
   selector: "my-app",
   template: `
-    {{diagnostic}}
     <div class="panel panel-default">
       <div class="panel-body">
         <form (ngSubmit)="onSubmit()">
@@ -33,7 +31,7 @@ import {EditorComponent} from "./editor.component";
     <router-outlet></router-outlet>
   `,
   directives: [ROUTER_DIRECTIVES, EditorComponent],
-  providers: [HTTP_PROVIDERS, SnippetService, EditingDataService],
+  providers: [SnippetService, EditingDataService],
 })
 @RouteConfig([
   { path: "/",      name: "Home",           component: HomeComponent },

@@ -1,44 +1,14 @@
 <!DOCTYPE html>
 <html lang="ja">
   <head>
-    <base href="/">
     <meta charset="UTF-8">
     <meta content="width=device-width, initial-scale=1" name="viewport">
     <title>poe: online ruby environment</title>
-    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/codemirror/5.11.0/codemirror.min.css">
     <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/css/bootstrap.min.css">
-    <link rel="stylesheet" href="/poe.css">
-    <script src="node_modules/codemirror/lib/codemirror.js"></script>
-    <script src="node_modules/codemirror/mode/ruby/ruby.js"></script>
-    <script src="node_modules/codemirror/mode/php/php.js"></script>
-    <script src="node_modules/codemirror/mode/htmlmixed/htmlmixed.js"></script>
-    <script src="node_modules/codemirror/mode/xml/xml.js"></script>
-    <script src="node_modules/codemirror/mode/css/css.js"></script>
-    <script src="node_modules/codemirror/mode/clike/clike.js"></script>
-    <script src="node_modules/codemirror/mode/javascript/javascript.js"></script>
-    <script src="node_modules/codemirror/addon/edit/closebrackets.js"></script>
-    <script src="node_modules/codemirror/addon/edit/matchbrackets.js"></script>
-
-    <script src="node_modules/es6-shim/es6-shim.min.js"></script>
-    <script src="node_modules/systemjs/dist/system-polyfills.js"></script>
-    <script src="node_modules/angular2/bundles/angular2-polyfills.js"></script>
-    <script src="node_modules/systemjs/dist/system.src.js"></script>
-    <script src="node_modules/rxjs/bundles/Rx.js"></script>
-    <script src="node_modules/angular2/bundles/angular2.dev.js"></script>
-    <script src="node_modules/angular2/bundles/router.dev.js"></script>
-    <script src="node_modules/angular2/bundles/http.dev.js"></script>
-    <script>
-      System.config({
-        packages: {        
-          app: {
-            format: "register",
-            defaultExtension: "js"
-          }
-        }
-      });
-      System.import("app/main")
-            .then(null, console.error.bind(console));
-    </script>
+    <link rel="stylesheet" href="dist/codemirror.css">
+    <link rel="stylesheet" href="poe.css">
+    <script src="dist/es6-shim.min.js"></script>
+    <script src="dist/angular2-polyfills.js"></script>
   </head>
   <body>
     <nav class="navbar navbar-default navbar-static-top">
@@ -52,5 +22,6 @@
       </div>
     </nav>
     <div class="container-fluid"><my-app>Loading...</my-app></div>
+    <script src="bootstrap.js"></script>
   </body>
 </html>

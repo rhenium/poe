@@ -1,5 +1,15 @@
 import {Component, OnInit, ElementRef, Input, Output, EventEmitter} from "angular2/core";
 import {EditingData, EditingDataService} from "./editing-data.service";
+import CodeMirror from "codemirror";
+import "codemirror/mode/ruby/ruby";
+import "codemirror/mode/php/php";
+import "codemirror/mode/htmlmixed/htmlmixed";
+import "codemirror/mode/xml/xml";
+import "codemirror/mode/css/css";
+import "codemirror/mode/clike/clike";
+import "codemirror/mode/javascript/javascript";
+import "codemirror/addon/edit/closebrackets";
+import "codemirror/addon/edit/matchbrackets";
 
 @Component({
   selector: "editor",

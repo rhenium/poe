@@ -1,0 +1,81 @@
+require "fileutils"
+require "shellwords"
+
+def e(s) Shellwords.escape(s) end
+
+ENV["PATH"] = "./node_modules/.bin:#{ENV["PATH"]}"
+
+$root = File.expand_path("..", __FILE__)
+$destdir = ENV["DESTDIR"] || File.join($root, "target")
+
+$deps = [
+  "node_modules/es6-shim/es6-shim.min.js",
+  "node_modules/angular2/bundles/angular2-polyfills.js",
+  "node_modules/codemirror/lib/codemirror.css",
+]
+
+$copies = [
+  "index.html",
+  "poe.css",
+]
+
+$minify = <<EOF
+"use strict";
+const path = require("path");
+const Builder = require("systemjs-builder");
+
+const builder = new Builder("./", "./bootstrap.js");
+builder
+  .buildStatic("app/main", "#{$destdir}/bootstrap.js", { sourceMaps: false, minify: true, mangle: false, globalDefs: { ENV: "production" } })
+  .then(() => console.log("Build complete"))
+  .catch(err => {
+    console.log("Build error");
+    console.log(err);
+  });
+EOF
+
+task :deploy => [:prepare, :compile] do
+  FileUtils.mkdir_p($destdir)
+
+  puts "Building main bundle...."
+  system "echo #{e $minify} | node" || exit(1)
+
+  puts "Minifying dependencies...."
+  FileUtils.mkdir_p(File.join($destdir, "dist"))
+  $deps.each { |dep_|
+    dep = File.basename(dep_)
+    src = File.join($root, "dist", dep)
+    out = File.join($destdir, "dist", dep)
+    case dep
+    when /\.js$/
+      puts "uglifyjs #{dep}"
+      system "uglifyjs --compress --mangle -o #{e out} #{e src}" || exit(1)
+    when /\.css$/
+      puts "cleancss #{dep}"
+      system "cleancss -o #{e out} #{e src}" || exit(1)
+    else
+      raise "unknown file type: #{dep}"
+    end
+  }
+
+  puts "Copying static files...."
+  $copies.each { |copy|
+    puts "Copying #{copy}"
+    FileUtils.cp(File.join($root, copy), $destdir)
+  }
+end
+
+task :prepare do
+  dest = File.join($root, "dist")
+  FileUtils.mkdir_p(dest)
+
+  $deps.each { |dep|
+    puts "Copying #{dep} to #{dest}"
+    FileUtils.cp(File.join($root, dep), dest)
+  }
+end
+
+task :compile do
+  puts "Running tsc...."
+  system "tsc" || exit(1)
+end
