@@ -15,6 +15,7 @@ export class Result {
     public exit: number,
     public message: string,
     public output: any[],
+    public _: any,
     public truncated: boolean) { }
 }
 

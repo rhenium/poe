@@ -1,4 +1,4 @@
-import {Component, OnInit} from "angular2/core";
+import {Component, OnInit, OnChanges, SimpleChange} from "angular2/core";
 import {Router, RouteParams} from "angular2/router";
 import {Snippet, Result, SnippetService} from "./snippet.service";
 import {EditingData, EditingDataService} from "./editing-data.service";
@@ -37,7 +37,7 @@ export class SnippetDetailComponent implements OnInit {
   // Result に移動したいんだけどどうすればいいんだろ
   formatted_output(r: Result): string {
     if (this.isRunning(r)) return "Running...";
-    console.log(r);
+    if (r._) return r._;
     let haveNewLine = false
     let str = r.output.reduce((str, pair) => {
       let fd = pair[0];
@@ -64,6 +64,7 @@ export class SnippetDetailComponent implements OnInit {
       str += "\n<span class=\"result-exit\">" + this.escapeHTML("Time limit exceeded") + "</span>";
     }
 
+    r._ = str;
     return str;
   }
 

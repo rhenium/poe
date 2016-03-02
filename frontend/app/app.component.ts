@@ -1,4 +1,4 @@
-import {Component, AfterViewInit, ViewChild, Input} from "angular2/core";
+import {Component} from "angular2/core";
 import {Router, RouteParams} from "angular2/router";
 import {NgForm}    from 'angular2/common';
 import {RouteConfig, ROUTER_DIRECTIVES} from "angular2/router";
@@ -55,24 +55,5 @@ export class AppComponent {
       snip => this._router.navigate(["SnippetDetail", { sid: snip.id }]),
       error => console.log(error)
     );
-  }
-
-  ngAfterViewInit() {
-    const codeMirrorBlock = document.querySelector("#code-field .CodeMirror");
-    if (codeMirrorBlock === null) {
-      const origContainer = <HTMLElement>document.querySelector("#code-field");
-      const codeMirror = CodeMirror(origContainer, {
-        mode: "ruby",
-        lineNumbers: true,
-        value: this.editing.code,
-        extraKeys: {
-          "Ctrl-Enter": cm => {
-            this.editing.code = cm.getValue();
-            this.onSubmit();
-          }
-        }
-      });
-      codeMirror.on("change", cm => this.editing.code = cm.getDoc().getValue());
-    }
   }
 }
