@@ -14,6 +14,7 @@ struct RunResultMetadata {
     pub exit: i32,
     pub result: i32,
     pub message: String,
+    pub truncated: bool,
 }
 
 pub fn open_render(snip: &Snippet, comp: &Compiler) -> Json {
@@ -27,9 +28,9 @@ pub fn open_render(snip: &Snippet, comp: &Compiler) -> Json {
             let meta: RunResultMetadata = json::decode(&encoded).unwrap();
             map.insert("exit".to_string(), meta.exit.to_json());
             map.insert("result".to_string(), meta.result.to_json());
-            let (out, truncated) = read_output_str(&snip, &comp);
-            map.insert("output".to_string(), out.to_json());
-            map.insert("truncated".to_string(), truncated.to_json());
+            map.insert("message".to_string(), meta.message.to_json());
+            map.insert("truncated".to_string(), meta.truncated.to_json());
+            map.insert("output".to_string(), read_output_str(&snip, &comp).to_json());
         },
         Err(_) => {
             map.insert("result".to_string(), None::<i32>.to_json());
@@ -41,8 +42,7 @@ pub fn open_render(snip: &Snippet, comp: &Compiler) -> Json {
 
 pub fn read_stdout_raw(snip: &Snippet, comp: &Compiler) -> Vec<u8> {
     let mut out = vec![];
-    let (raw_out, _trunc) = read_output_raw(&snip, &comp);
-    for (fd, raw) in raw_out {
+    for (fd, raw) in read_output_raw(&snip, &comp) {
         if fd == 1 {
             out.extend_from_slice(&raw); // TODO: this copies
         }
@@ -50,15 +50,13 @@ pub fn read_stdout_raw(snip: &Snippet, comp: &Compiler) -> Vec<u8> {
     out
 }
 
-fn read_output_str(snip: &Snippet, comp: &Compiler) -> (Vec<(u8, String)>, bool) {
-    let (raw_out, trunc) = read_output_raw(&snip, &comp);
-    let new_out = raw_out.iter().map(|pair| {
+fn read_output_str(snip: &Snippet, comp: &Compiler) -> Vec<(u8, String)> {
+    read_output_raw(&snip, &comp).iter().map(|pair| {
         (pair.0, String::from_utf8_lossy(&pair.1).into_owned())
-    }).collect();
-    (new_out, trunc)
+    }).collect()
 }
 
-fn read_output_raw(snip: &Snippet, comp: &Compiler) -> (Vec<(u8, Vec<u8>)>, bool) {
+fn read_output_raw(snip: &Snippet, comp: &Compiler) -> Vec<(u8, Vec<u8>)> {
     let f = |out: &mut Vec<(u8, Vec<u8>)>| {
         let mut out_file = stry!(fs::File::open(format!("{}/results/{}.output", &snip.basedir(), &comp.id)));
         while let Ok(fd) = out_file.read_u8() {
@@ -72,11 +70,15 @@ fn read_output_raw(snip: &Snippet, comp: &Compiler) -> (Vec<(u8, Vec<u8>)>, bool
     };
 
     let mut out = vec![];
-    let truncated = Ok(()) != f(&mut out);
-    (out, truncated)
+    if f(&mut out).is_err() {
+        // TODO: show err?
+    }
+    out
 }
 
 pub fn parse_and_save(snip: &Snippet, comp: &Compiler, output: Output) -> Result<(), PoeError> {
+    let output_limit = 65536;
+
     if output.status.success() {
         if output.stderr.len() < 8 {
             return Err(PoeError::from("failed sandbox (result)"));
@@ -87,13 +89,14 @@ pub fn parse_and_save(snip: &Snippet, comp: &Compiler, output: Output) -> Result
         let reason = rdr.read_i32::<LittleEndian>().unwrap();
         let exit = rdr.read_i32::<LittleEndian>().unwrap();
         let msg_str = String::from_utf8_lossy(&msgvec);
-        let meta = RunResultMetadata { exit: exit, result: reason, message: (&*msg_str).to_string() };
+        let trunc = output.stdout.len() > output_limit;
+        let meta = RunResultMetadata { exit: exit, result: reason, message: msg_str.into_owned(), truncated: trunc };
 
         let mut meta_file = try!(fs::File::create(format!("{}/results/{}.json", &snip.basedir(), &comp.id)));
         try!(meta_file.write(json::encode(&meta).unwrap().as_bytes()));
 
         let mut out_file = try!(fs::File::create(format!("{}/results/{}.output", &snip.basedir(), &comp.id)));
-        try!(out_file.write(&output.stdout));
+        try!(out_file.write(if trunc { &output.stdout[..output_limit] } else { &output.stdout }));
 
         Ok(())
     } else {

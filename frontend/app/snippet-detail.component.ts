@@ -5,11 +5,10 @@ import {EditingData, EditingDataService} from "./editing-data.service";
 
 @Component({
   template: `
-    <div class="result-item panel panel-default" *ngFor="#r of snippet.results"><!-- panel-{success|danger|default} -->
+    <div class="result-item panel panel-default" *ngFor="#r of snippet.results.slice().reverse()" [ngClass]="{'panel-success': isSuccess(r), 'panel-danger': isFailure(r), 'panel-default': isRunning(r)}">
       <div class="panel-heading">{{r.compiler.id}} ({{r.compiler.version}})</div>
       <div class="panel-body">
-        <pre *ngIf="r.result !== null"><code [innerHTML]="formatted_output(r)"></code></pre>
-        <pre *ngIf="!r.result === null"><code>Running....</code></pre>
+        <pre><code [innerHTML]="formatted_output(r)"></code></pre>
       </div>
     </div>
   `,
@@ -37,15 +36,19 @@ export class SnippetDetailComponent implements OnInit {
 
   // Result に移動したいんだけどどうすればいいんだろ
   formatted_output(r: Result): string {
+    if (this.isRunning(r)) return "Running...";
+    console.log(r);
+    let haveNewLine = false
     let str = r.output.reduce((str, pair) => {
       let fd = pair[0];
       let escaped = this.escapeHTML(pair[1]);
+      haveNewLine = pair[1].endsWith("\n");
       return str + "<span class=\"result-fd-" + fd + "\">" + escaped + "</span>";
     }, "");
 
     if (r.truncated) {
       str += "<span class=\"result-info\">[truncated]</span>"
-    } else if (!r.output[r.output.length - 1][1].endsWith("\n")) {
+    } else if (!haveNewLine) {
       str += "<span class=\"result-info\">%</span>"
     }
 
@@ -53,6 +56,12 @@ export class SnippetDetailComponent implements OnInit {
       if (r.exit !== 0) {
         str += "\n<span class=\"result-exit\">Process exited with status " + r.exit + "</span>";
       }
+    } else if (r.result === 1) { // Signaled
+      if (r.message.length > 0) {
+        str += "\n<span class=\"result-exit\">" + this.escapeHTML(r.message) + "</span>";
+      }
+    } else if (r.result === 2) {
+      str += "\n<span class=\"result-exit\">" + this.escapeHTML("Time limit exceeded") + "</span>";
     }
 
     return str;
@@ -61,6 +70,18 @@ export class SnippetDetailComponent implements OnInit {
   // これも
   result_text(r: Result): string {
     return ["Success", "Signaled", "Timed out"][r.result];
+  }
+
+  isSuccess(r: Result) {
+    return r.result === 0 && r.exit === 0;
+  }
+
+  isFailure(r: Result) {
+    return !this.isRunning(r) && !this.isSuccess(r);
+  }
+
+  isRunning(r: Result) {
+    return r.result === null;
   }
 
   runRemaining() {
