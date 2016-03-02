@@ -1,44 +1,89 @@
-.navbar > .container-fluid {
+body {
+  font-size: 14px;
+  font-family: sans-serif;
+  line-height: 1.4;
+  color: #333333;
+  margin: 0;
+}
+
+.navbar {
+  margin-bottom: 20px;
+  border: 1px solid #e7e7e7;
+  border-width: 0 0 1px;
+  background-color: #f8f8f8;
   padding: 0 30px;
+  display: flex;
+  align-items: center;
 }
 
-/* disable responsive design in navbar partially */
-@media (max-width: 768px) {
-  .navbar-nav {
-    margin: 0 -15px;
-
-    li > a {
-      padding-top: 15px;
-      padding-bottom: 15px;
-    }
-  }
-
-  .navbar-left {
-    float: left;
-  }
-
-  .navbar-right {
-    float: right;
-  }
-
-  .navbar-nav > li {
-    float: left;
-  }
+.navbar .brand {
+  flex-grow: 1;
+  padding: 15px 0;
+  font-size: 18px;
 }
 
-
-.result-exit {
-  color: orange;
+.navbar ul {
+  list-style: none;
+  margin: 0;
+  display: flex;
+  align-items: center;
 }
 
-.result-info {
-  color: white;
-  background-color: black;
+.navbar ul li {
+  display: block;
 }
 
-.result-fd-1 {
+.navbar a {
+  color: #777777;
+  text-decoration: none;
 }
 
-.result-fd-2 {
-  color: red;
+.container {
+  padding: 0 15px;
 }
+
+/* begin .panel */
+.panel {
+  margin: 20px 0;
+  border: 1px solid #dddddd;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+}
+
+.panel .panel-heading {
+  padding: 10px 15px;
+  border-bottom: 1px solid transparent;
+  border-color: inherit;
+}
+
+.panel .panel-body {
+  padding: 15px;
+}
+
+.panel-success { border-color: #d6e9c6; }
+.panel-success .panel-heading { color: #3c763d; background-color: #dff0d8; }
+.panel-failure { border-color: #ebccd1; }
+.panel-failure .panel-heading { color: #a94442; background-color: #f2dede; }
+.panel-running { border-color: #dddddd; }
+.panel-running .panel-heading { color: #333333; background-color: #f5f5f5; }
+/* end panel */
+
+pre {
+  display: block;
+  padding: 10px;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+  border: 1px solid #cccccc;
+  background-color: #f5f5f5;
+  overflow: scroll;
+}
+
+pre code {
+  font-family: monospace;
+}
+
+.result-exit { color: orange; }
+.result-info { color: white; background-color: black; }
+
+.result-fd-1 { }
+.result-fd-2 { color: red; }

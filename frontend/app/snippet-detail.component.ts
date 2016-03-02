@@ -5,7 +5,9 @@ import {EditingData, EditingDataService} from "./editing-data.service";
 
 @Component({
   template: `
-    <div class="result-item panel panel-default" *ngFor="#r of snippet.results.slice().reverse()" [ngClass]="{'panel-success': isSuccess(r), 'panel-danger': isFailure(r), 'panel-default': isRunning(r)}">
+    <div class="result-item panel"
+        *ngFor="#r of snippet.results.slice().reverse()"
+        [ngClass]="{'panel-success': isSuccess(r), 'panel-failure': isFailure(r), 'panel-running': isRunning(r)}">
       <div class="panel-heading">{{r.compiler.id}} ({{r.compiler.version}})</div>
       <div class="panel-body">
         <pre><code [innerHTML]="formatted_output(r)"></code></pre>
