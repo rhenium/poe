@@ -6,6 +6,7 @@ use config;
 use run_result;
 use snippet::Snippet;
 
+#[derive(Debug)]
 pub struct Compiler {
     pub id: String,
     pub lang: String,

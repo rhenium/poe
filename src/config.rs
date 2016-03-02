@@ -6,6 +6,7 @@ use std::env;
 use std::collections::BTreeMap;
 use compiler::Compiler;
 
+#[derive(Debug)]
 struct Config {
     datadir: String,
     runner: String,

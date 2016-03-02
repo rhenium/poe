@@ -14,6 +14,7 @@ pub struct SnippetMetadata {
     pub created: i64,
 }
 
+#[derive(Debug)]
 pub struct Snippet {
     pub id: String,
     pub metadata: SnippetMetadata,
