@@ -51,7 +51,13 @@ export class EditorComponent implements OnInit {
         exec: e => this.onSubmit.emit(this),
       });
 
+      let changed = false;
+      this.editor.addEventListener("input", () => {
+        changed = true;
+      }); // なにこれ
       this.editor.addEventListener("change", e => {
+        if (!changed) return;
+        changed = false;
         let s = this.editor.getValue();
         if (this._value !== s) {
           this._value = s;

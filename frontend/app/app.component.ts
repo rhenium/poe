@@ -54,7 +54,7 @@ export class AppComponent {
   constructor(
     private _service: SnippetService,
     _edit_service: EditingDataService,
-    _router: Router,
+    private _router: Router,
     _title: Title) {
     this.editing = _edit_service.get();
     _router.subscribe(path => {
