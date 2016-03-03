@@ -266,5 +266,5 @@ main(int argc, char *argv[])
         NONNEGATIVE(sd_event_loop(event));
     }
 
-    ERROR("unreachable");
+    UNREACHABLE();
 }

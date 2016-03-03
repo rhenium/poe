@@ -5,8 +5,6 @@
 # error unsupported
 #endif
 
-#include "config.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -22,6 +20,7 @@
 #include <assert.h>
 #include <signal.h>
 #include <time.h>
+#include <execinfo.h>
 #include <ftw.h>
 #include <fcntl.h>
 #include <sys/wait.h>
@@ -40,6 +39,7 @@
 
 #define NONNEGATIVE(s) do if ((s) < 0) ERROR("CRITICAL: %s:%d %s", __FILE__, __LINE__, #s); while (0)
 #define NONNULL(s) do if (!(s)) ERROR("CRITICAL: %s:%d %s", __FILE__, __LINE__, #s); while (0)
+#define UNREACHABLE() __builtin_unreachable()
 
 enum poe_exit_reason {
     POE_SUCCESS,
@@ -56,6 +56,11 @@ enum poe_handler_result {
     POE_ALLOWED
 };
 
+struct syscall_rule {
+    int syscall;
+    uint32_t action;
+};
+
 void poe_init_seccomp(uint32_t);
 void poe_init_systemd(pid_t);
 void poe_exit_systemd(void);
@@ -64,14 +69,13 @@ char *poe_init_playground(const char *, const char *);
 char *poe_copy_program_to_playground(const char *, const char *);
 void poe_destroy_playground(void);
 
-/*
-static void
+static void __attribute__ ((unused))
 print_backtrace(void)
 {
     void *trace[128];
     int n = backtrace(trace, sizeof(trace) / sizeof(trace[0]));
-    backtrace_symbols_fd(trace, n, 1);
+    backtrace_symbols_fd(trace, n, 2);
 }
-*/
 
+#include "config.h"
 #endif
