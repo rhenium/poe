@@ -1,6 +1,8 @@
 import {Component, OnInit, ElementRef, Input, Output, EventEmitter} from "angular2/core";
 import {EditingData, EditingDataService} from "./editing-data.service";
-import "ace/ace";
+import "brace";
+import "brace/mode/php";
+import "brace/mode/ruby";
 
 @Component({
   selector: "editor",
