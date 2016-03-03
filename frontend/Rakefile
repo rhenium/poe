@@ -11,7 +11,6 @@ $destdir = ENV["DESTDIR"] || File.join($root, "target")
 $deps = [
   "node_modules/es6-shim/es6-shim.min.js",
   "node_modules/angular2/bundles/angular2-polyfills.js",
-  "node_modules/codemirror/lib/codemirror.css",
 ]
 
 $copies = [
