@@ -13,22 +13,32 @@ import {EditorComponent} from "./editor.component";
 @Component({
   selector: "my-app",
   template: `
-    <div class="panel panel-default">
-      <div class="panel-body">
-        <form (ngSubmit)="onSubmit()">
-          <div class="form-group" id="code-field">
-            <editor (onSubmit)="onSubmit()" [(value)]="editing.code" [mode]="editing.lang"></editor>
-          </div>
-          <div class="form-inline">
-            <select class="form-control" [(ngModel)]="editing.lang" required>
-              <option *ngFor="#p of langs" [value]="p">{{p}}</option>
-            </select>
-            <button class="btn btn-default" type="submit">Run</button>
-          </div>
-        </form>
+    <nav class="navbar">
+      <div class="brand">
+        <a class="navbar-brand" [routerLink]="['Home']">Poe</a>
       </div>
+      <!--<ul>
+        <li><a href="/about">about</a></li>
+      </ul>-->
+    </nav>
+    <div class="container">
+      <div class="panel panel-default">
+        <div class="panel-body">
+          <form (ngSubmit)="onSubmit()">
+            <div class="form-group" id="code-field">
+              <editor (onSubmit)="onSubmit()" [(value)]="editing.code" [mode]="editing.lang"></editor>
+            </div>
+            <div class="form-inline">
+              <select class="form-control" [(ngModel)]="editing.lang" required>
+                <option *ngFor="#p of availableLangs()" [value]="p">{{p}}</option>
+              </select>
+              <button class="btn btn-default" type="submit">Run</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      <router-outlet></router-outlet>
     </div>
-    <router-outlet></router-outlet>
   `,
   directives: [ROUTER_DIRECTIVES, EditorComponent],
   providers: [SnippetService, EditingDataService],
@@ -38,14 +48,13 @@ import {EditorComponent} from "./editor.component";
   { path: "/:sid",  name: "SnippetDetail",  component: SnippetDetailComponent },
 ])
 export class AppComponent {
-  langs = ["ruby", "php"];
   editing: EditingData;
 
   constructor(
     private _service: SnippetService,
     private _edit_service: EditingDataService,
     private _router: Router) {
-    this.editing = _edit_service.getData(this.langs[0]);
+    this.editing = _edit_service.get();
   }
 
   onSubmit() {
@@ -53,5 +62,10 @@ export class AppComponent {
       snip => this._router.navigate(["SnippetDetail", { sid: snip.id }]),
       error => console.log(error)
     );
+  }
+
+  // これなんとかならない？
+  availableLangs() {
+    return EditingData.availableLangs;
   }
 }

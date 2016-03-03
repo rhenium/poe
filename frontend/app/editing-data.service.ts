@@ -6,6 +6,8 @@ import {Observable}     from "rxjs/Observable";
 import {Snippet, SnippetService} from "./snippet.service";
 
 export class EditingData {
+  public static availableLangs = ["ruby", "php"];
+
   constructor(
     public code: string,
     public lang: string) { }
@@ -13,18 +15,19 @@ export class EditingData {
 
 @Injectable()
 export class EditingDataService {
-  private data: EditingData;
+  private data: EditingData = new EditingData("", "ruby");
 
-  getData(lang: string) {
-    if (!this.data) {
-      this.data = new EditingData("", lang);
-    }
+  get() {
     return this.data;
   }
 
+  reset() {
+    this.data.code = "";
+    this.data.lang = EditingData.availableLangs[0];
+  }
+
   fromSnippet(snip: Snippet) {
-    let data = this.getData(snip.lang);
-    data.code = snip.code;
-    data.lang = snip.lang;
+    this.data.code = snip.code;
+    this.data.lang = snip.lang;
   }
 }
