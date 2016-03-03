@@ -1,7 +1,8 @@
 import {Component} from "angular2/core";
 import {Router, RouteParams} from "angular2/router";
 import {RouteConfig, ROUTER_DIRECTIVES} from "angular2/router";
-import {HTTP_PROVIDERS} from 'angular2/http';
+import {HTTP_PROVIDERS} from "angular2/http";
+import {Title} from "angular2/platform/browser";
 
 import {HomeComponent} from "./home.component";
 import {SnippetDetailComponent} from "./snippet-detail.component";
@@ -41,7 +42,7 @@ import {EditorComponent} from "./editor.component";
     </div>
   `,
   directives: [ROUTER_DIRECTIVES, EditorComponent],
-  providers: [SnippetService, EditingDataService],
+  providers: [SnippetService, EditingDataService, Title],
 })
 @RouteConfig([
   { path: "/",      name: "Home",           component: HomeComponent },
@@ -52,9 +53,17 @@ export class AppComponent {
 
   constructor(
     private _service: SnippetService,
-    private _edit_service: EditingDataService,
-    private _router: Router) {
+    _edit_service: EditingDataService,
+    _router: Router,
+    _title: Title) {
     this.editing = _edit_service.get();
+    _router.subscribe(path => {
+      let title = "poe: online ruby environment";
+      if (path !== "") {
+        title = path + " - " + title;
+      }
+      _title.setTitle(title);
+    });
   }
 
   onSubmit() {
