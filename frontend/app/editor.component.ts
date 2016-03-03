@@ -13,9 +13,7 @@ import "codemirror/addon/edit/matchbrackets";
 
 @Component({
   selector: "editor",
-  template: `
-    <textarea></textarea>
-  `,
+  template: "",
 })
 export class EditorComponent implements OnInit {
   private _mode: string;
@@ -37,16 +35,16 @@ export class EditorComponent implements OnInit {
   @Output() valueChange = new EventEmitter();
   @Output() onSubmit = new EventEmitter();
 
-  private cm: CodeMirror.EditorFromTextArea;
+  private cm: CodeMirror.Editor;
 
   constructor(
-    private elementRef: ElementRef) { }
+    private elementRef: ElementRef) {
+  }
 
   ngOnInit() {
     if (!this.cm) {
       const elm = this.elementRef.nativeElement;
-      const origTextarea = <HTMLTextAreaElement>elm.querySelector("textarea");
-      this.cm = CodeMirror.fromTextArea(origTextarea, {
+      this.cm = CodeMirror(elm, {
         mode: this._mode,
         lineNumbers: true,
         value: this._value,
@@ -55,10 +53,10 @@ export class EditorComponent implements OnInit {
         }
       });
       this.cm.on("change", cm => {
-        this.cm.save();
-        if (this._value !== origTextarea.value) {
-          this._value = origTextarea.value;
-          this.valueChange.emit(this._value);
+        const val = cm.getDoc().getValue();
+        if (this._value !== val) {
+          this._value = val;
+          this.valueChange.emit(val);
         }
       });
     }

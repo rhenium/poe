@@ -39,7 +39,7 @@ export class SnippetDetailComponent implements OnInit {
   // Result に移動したいんだけどどうすればいいんだろ
   formatted_output(r: Result): string {
     if (this.isRunning(r)) return "Running...";
-    if (r._) return r._;
+    if (r._) return r._; // うーーーーーーーーーーん💩
     let haveNewLine = false;
     let str = r.output.reduce((str, pair) => {
       let fd = pair[0];
