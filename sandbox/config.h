@@ -8,14 +8,16 @@
 #define POE_TASKS_LIMIT 32ULL
 #define POE_TIME_LIMIT (1000ULL * 1000ULL * 5ULL) // us
 
-
 // syscall filter
+#include <seccomp.h>
 #define RULE(name, action) { SCMP_SYS(name), SCMP_ACT_##action }
 #define ALLOW(name) RULE(name, ALLOW)
+/* because of Linux 4.4 bug, we can't kill stopped init. so kill without stopping it
+#define KILL(name) RULE(name, TRACE(2)) */
 #define KILL(name) RULE(name, KILL)
 static const struct syscall_rule syscall_rules[] = {
     KILL(ptrace),
-    KILL(prctl),
+    RULE(prctl, ERRNO(EPERM)), /* TODO: PR_SET_NAME or PR_GET_NAME should be allowed */
     RULE(syslog, ERRNO(EPERM)),
     RULE(socket, ERRNO(EPERM)),
     ALLOW(execve),

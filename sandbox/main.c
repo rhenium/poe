@@ -1,4 +1,6 @@
 #include "sandbox.h"
+#include <systemd/sd-event.h>
+#include <sys/ptrace.h>
 
 static void
 poe_exit(int status)
@@ -41,7 +43,6 @@ child(const char *root, char *cmd[])
     pid_t pid = (pid_t)syscall(SYS_getpid);
     assert(pid == 1);
 
-    // die when parent dies
     NONNEGATIVE(prctl(PR_SET_PDEATHSIG, SIGKILL, 0, 0, 0));
 
     NONNEGATIVE(sethostname(POE_HOSTNAME, strlen(POE_HOSTNAME)));
@@ -74,7 +75,7 @@ child(const char *root, char *cmd[])
     NONNEGATIVE(kill(pid, SIGSTOP));
 
     NONNEGATIVE(prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0));
-    poe_init_seccomp(SCMP_ACT_TRACE(0));
+    poe_seccomp_init();
 
     NONNEGATIVE(execvpe(cmd[0], cmd, env));
 }
@@ -84,26 +85,6 @@ get_arg(pid_t pid, int i)
 {
     static const int regs[] = {RDI, RSI, RDX, R10, R8, R9};
     return ptrace(PTRACE_PEEKUSER, pid, sizeof(intptr_t) * (size_t)regs[i - 1]);
-}
-
-static void
-handle_syscall(pid_t pid)
-{
-    errno = 0;
-    int syscalln = ptrace(PTRACE_PEEKUSER, pid, sizeof(long) * ORIG_RAX);
-    if (errno) ERROR("ptrace(PTRACE_PEEKUSER) failed");
-
-    switch (syscalln) {
-    default:
-        goto kill;
-    }
-kill:
-    kill(pid, SIGKILL);
-    char *rule = seccomp_syscall_resolve_num_arch(SCMP_ARCH_NATIVE, syscalln);
-    if (!rule) ERROR("seccomp_syscall_resolve_num_arch() failed");
-    FINISH(POE_SIGNALED, -1, "System call %s is blocked", rule);
-/*allowed:
-    ptrace(PTRACE_CONT, pid, 0, 0);*/
 }
 
 static int
@@ -124,10 +105,12 @@ sigchld_handler(sd_event_source *es, const struct signalfd_siginfo *si, void *vm
         } else if (WIFSIGNALED(status) && spid == mpid) {
             FINISH(POE_SIGNALED, -1, "Program terminated with signal %d (%s)", WTERMSIG(status), strsignal(WTERMSIG(status)));
         } else if (WIFSTOPPED(status)) {
+            unsigned long edata;
             int e = status >> 16 & 0xff;
             switch (e) {
             case PTRACE_EVENT_SECCOMP:
-                handle_syscall(spid);
+                NONNEGATIVE(ptrace(PTRACE_GETEVENTMSG, spid, 0, &edata));
+                poe_seccomp_handle_syscall(spid, edata);
                 break;
             case PTRACE_EVENT_CLONE:
             case PTRACE_EVENT_FORK:

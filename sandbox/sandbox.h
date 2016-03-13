@@ -7,6 +7,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <stdarg.h>
 #include <string.h>
 #include <stdbool.h>
@@ -15,7 +16,6 @@
 #include <pwd.h>
 #include <grp.h>
 #include <sched.h>
-#include <seccomp.h>
 #include <getopt.h>
 #include <assert.h>
 #include <signal.h>
@@ -25,17 +25,11 @@
 #include <fcntl.h>
 #include <sys/wait.h>
 #include <sys/mount.h>
-#include <sys/ptrace.h>
 #include <sys/reg.h>
 #include <sys/prctl.h>
 #include <sys/syscall.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-
-#include <systemd/sd-bus.h>
-#include <systemd/sd-login.h>
-#include <systemd/sd-daemon.h>
-#include <systemd/sd-event.h>
 
 #define NONNEGATIVE(s) do if ((s) < 0) ERROR("CRITICAL: %s:%d %s", __FILE__, __LINE__, #s); while (0)
 #define NONNULL(s) do if (!(s)) ERROR("CRITICAL: %s:%d %s", __FILE__, __LINE__, #s); while (0)
@@ -61,7 +55,8 @@ struct syscall_rule {
     uint32_t action;
 };
 
-void poe_init_seccomp(uint32_t);
+void poe_seccomp_init(void);
+void poe_seccomp_handle_syscall(pid_t, unsigned long);
 void poe_init_systemd(pid_t);
 void poe_exit_systemd(void);
 
