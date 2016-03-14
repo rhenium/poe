@@ -6,7 +6,7 @@
 #define POE_HOSTNAME "poe-sandbox"
 #define POE_MEMORY_LIMIT (1024ULL * 1024ULL * 128ULL)
 #define POE_TASKS_LIMIT 32ULL
-#define POE_TIME_LIMIT (1000ULL * 1000ULL * 5ULL * 100ULL) // us
+#define POE_TIME_LIMIT 5 // sec
 #define POE_CGROUP_ROOT POE_TEMPORARY_BASE"/cgroup"
 #define POE_UID 27627
 #define POE_GID 27627
