@@ -22,6 +22,7 @@
 #include <time.h>
 #include <execinfo.h>
 #include <ftw.h>
+#include <limits.h>
 #include <fcntl.h>
 #include <sys/wait.h>
 #include <sys/mount.h>
@@ -31,9 +32,8 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#define NONNEGATIVE(s) do if ((s) < 0) ERROR("CRITICAL: %s:%d %s", __FILE__, __LINE__, #s); while (0)
-#define NONNULL(s) do if (!(s)) ERROR("CRITICAL: %s:%d %s", __FILE__, __LINE__, #s); while (0)
 #define UNREACHABLE() __builtin_unreachable()
+#define C_SYSCALL(s) if ((s) < 0) ERROR("CRITICAL: %s:%d %s", __FILE__, __LINE__, #s)
 
 enum poe_exit_reason {
     POE_SUCCESS,
@@ -41,7 +41,16 @@ enum poe_exit_reason {
     POE_TIMEDOUT,
 };
 
-void ERROR(const char *, ...);
+static void
+ERROR(const char *fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    vfprintf(stderr, fmt, args);
+    va_end(args);
+    exit(1);
+}
+
 void FINISH(enum poe_exit_reason, int, const char *, ...);
 
 enum poe_handler_result {
@@ -56,13 +65,17 @@ struct syscall_rule {
 };
 
 void poe_seccomp_init(void);
-void poe_seccomp_handle_syscall(pid_t, unsigned long);
-void poe_init_systemd(pid_t);
-void poe_exit_systemd(void);
+char *poe_seccomp_handle_syscall(pid_t, unsigned long);
+void poe_cgroup_init(void);
+void poe_cgroup_add(pid_t);
+void poe_cgroup_destroy(void);
+void poe_cgroup_unmount(void);
 
 char *poe_init_playground(const char *, const char *);
 char *poe_copy_program_to_playground(const char *, const char *);
 void poe_destroy_playground(void);
+
+void poe_do_child(const char *, char **, int);
 
 static void __attribute__ ((unused))
 print_backtrace(void)

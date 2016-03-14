@@ -1,29 +1,11 @@
 #include "sandbox.h"
-#include <systemd/sd-event.h>
 #include <sys/ptrace.h>
+#include <sys/epoll.h>
+#include <sys/timerfd.h>
+#include <sys/signalfd.h>
 
 static void
-poe_exit(int status)
-{
-    if (syscall(SYS_getpid) != 1) {
-        poe_exit_systemd();
-        poe_destroy_playground();
-    }
-    exit(status);
-}
-
-void
-ERROR(const char *fmt, ...)
-{
-    va_list args;
-    va_start(args, fmt);
-    vfprintf(stderr, fmt, args);
-    va_end(args);
-    poe_exit(1);
-}
-
-void
-FINISH(enum poe_exit_reason reason, int status, const char *fmt, ...)
+finish_exit(enum poe_exit_reason reason, int status, const char *fmt, ...)
 {
     assert(syscall(SYS_getpid) != 1);
     int xx[] = { reason, status };
@@ -34,141 +16,73 @@ FINISH(enum poe_exit_reason reason, int status, const char *fmt, ...)
         vfprintf(stderr, fmt, args);
         va_end(args);
     }
-    poe_exit(0);
+    exit(0);
 }
 
 static void
-child(const char *root, char *cmd[])
+handle_signal(pid_t mpid, struct signalfd_siginfo *si)
 {
-    pid_t pid = (pid_t)syscall(SYS_getpid);
-    assert(pid == 1);
+    switch (si->ssi_signo) {
+    case SIGCHLD:
+        while (true) {
+            int status;
+            pid_t spid = waitpid(-mpid, &status, WNOHANG|__WALL);
+            C_SYSCALL(spid);
+            if (!spid) break;
 
-    NONNEGATIVE(prctl(PR_SET_PDEATHSIG, SIGKILL, 0, 0, 0));
-
-    NONNEGATIVE(sethostname(POE_HOSTNAME, strlen(POE_HOSTNAME)));
-    NONNEGATIVE(mount(NULL, "/",        NULL,           MS_PRIVATE | MS_REC, NULL));
-    NONNEGATIVE(mount(root, root,       "bind",         MS_BIND | MS_REC, NULL));
-    NONNEGATIVE(chroot(root));
-    // NONNEGATIVE(mount(NULL, "/proc",    "proc",         MS_NOSUID | MS_NOEXEC | MS_NODEV, NULL));
-    // NONNEGATIVE(mount(NULL, "/dev",     "devtmpfs",     MS_NOSUID | MS_NOEXEC, NULL));
-    // NONNEGATIVE(mount(NULL, "/dev/shm", "tmpfs",        MS_NOSUID | MS_NODEV, NULL));
-
-    struct passwd *pw = getpwnam(POE_USERNAME);
-    if (!pw) ERROR("getpwnam() failed");
-
-    NONNEGATIVE(chdir("/tmp"));
-    NONNEGATIVE(setsid());
-    NONNEGATIVE(initgroups(POE_USERNAME, pw->pw_gid));
-    NONNEGATIVE(setresgid(pw->pw_gid, pw->pw_gid, pw->pw_gid));
-    NONNEGATIVE(setresuid(pw->pw_uid, pw->pw_uid, pw->pw_uid));
-
-    char *env[] = {
-        "PATH=/opt/bin:/usr/bin",
-        "USER=" POE_USERNAME,
-        "LOGNAME=" POE_USERNAME,
-        NULL,
-        NULL
-    };
-    NONNEGATIVE(asprintf(env + 3, "HOME=%s", pw->pw_dir));
-
-    // wait parent
-    NONNEGATIVE(kill(pid, SIGSTOP));
-
-    NONNEGATIVE(prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0));
-    poe_seccomp_init();
-
-    NONNEGATIVE(execvpe(cmd[0], cmd, env));
-}
-
-static inline long
-get_arg(pid_t pid, int i)
-{
-    static const int regs[] = {RDI, RSI, RDX, R10, R8, R9};
-    return ptrace(PTRACE_PEEKUSER, pid, sizeof(intptr_t) * (size_t)regs[i - 1]);
-}
-
-static int
-sigchld_handler(sd_event_source *es, const struct signalfd_siginfo *si, void *vmpid)
-{
-    (void)es;
-    pid_t mpid = *(pid_t *)vmpid;
-    if (si->ssi_signo != SIGCHLD) ERROR("parent: unexpected signal");
-
-    while (true) {
-        int status;
-        pid_t spid = waitpid(-mpid, &status, WNOHANG | __WALL);
-        NONNEGATIVE(spid);
-        if (!spid) break;
-
-        if (WIFEXITED(status) && spid == mpid) {
-            FINISH(POE_SUCCESS, WEXITSTATUS(status), NULL);
-        } else if (WIFSIGNALED(status) && spid == mpid) {
-            FINISH(POE_SIGNALED, -1, "Program terminated with signal %d (%s)", WTERMSIG(status), strsignal(WTERMSIG(status)));
-        } else if (WIFSTOPPED(status)) {
-            unsigned long edata;
-            int e = status >> 16 & 0xff;
-            switch (e) {
-            case PTRACE_EVENT_SECCOMP:
-                NONNEGATIVE(ptrace(PTRACE_GETEVENTMSG, spid, 0, &edata));
-                poe_seccomp_handle_syscall(spid, edata);
-                break;
-            case PTRACE_EVENT_CLONE:
-            case PTRACE_EVENT_FORK:
-            case PTRACE_EVENT_VFORK:
-                ptrace(PTRACE_CONT, spid, 0, 0);
-                break;
-            default:
-                ptrace(PTRACE_CONT, spid, 0, WSTOPSIG(status));
-                break;
+            if (WIFEXITED(status) && spid == mpid) {
+                finish_exit(POE_SUCCESS, WEXITSTATUS(status), NULL);
+            } else if (WIFSIGNALED(status) && spid == mpid) {
+                finish_exit(POE_SIGNALED, -1, "Program terminated with signal %d (%s)", WTERMSIG(status), strsignal(WTERMSIG(status)));
+            } else if (WIFSTOPPED(status)) {
+                unsigned long edata;
+                int e = status >> 16 & 0xff;
+                switch (e) {
+                case PTRACE_EVENT_SECCOMP:
+                    C_SYSCALL(ptrace(PTRACE_GETEVENTMSG, spid, 0, &edata));
+                    char *str = poe_seccomp_handle_syscall(spid, edata);
+                    if (str) {
+                        finish_exit(POE_SIGNALED, -1, "System call %s is blocked", str);
+                        free(str);
+                    }
+                    break;
+                case PTRACE_EVENT_CLONE:
+                case PTRACE_EVENT_FORK:
+                case PTRACE_EVENT_VFORK:
+                    ptrace(PTRACE_CONT, spid, 0, 0);
+                    break;
+                default:
+                    ptrace(PTRACE_CONT, spid, 0, WSTOPSIG(status));
+                    break;
+                }
             }
         }
+        break;
+    case SIGINT:
+    case SIGTERM:
+    case SIGHUP:
+        finish_exit(POE_TIMEDOUT, -1, "Supervisor terminated");
     }
-    return 0;
 }
 
-static int
-sigint_handler(sd_event_source *es, const struct signalfd_siginfo *si, void *vmpid)
+static void
+handle_timer(pid_t pid)
 {
-    (void)es;
-    (void)si;
-    (void)vmpid;
-    FINISH(POE_TIMEDOUT, -1, "Supervisor terminated");
-    return 0;
+    (void)pid;
+    finish_exit(POE_TIMEDOUT, -1, NULL);
 }
 
-static int
-timer_handler(sd_event_source *es, uint64_t usec, void *vmpid)
+static void
+handle_stdout(int fd, int orig_fd)
 {
-    (void)es;
-    (void)usec;
-    (void)vmpid;
-    FINISH(POE_TIMEDOUT, -1, NULL);
-    return 0;
-}
-
-static int
-stdout_handler(sd_event_source *es, int fd, uint32_t revents, void *vorig_fd)
-{
-    (void)es;
-    (void)revents;
-    char orig_fd = (char)*(int *)vorig_fd;
-    char buf[BUFSIZ];
+    char buf[PIPE_BUF];
 
     ssize_t n = read(fd, buf, sizeof(buf));
-    if (n < 0) {
-        if (errno == EAGAIN) {
-            return 0;
-        } else {
-            NONNEGATIVE(n);
-        }
-    } else {
-        uint32_t len = (uint32_t)n;
-        NONNEGATIVE(write(STDOUT_FILENO, &orig_fd, sizeof(orig_fd)));
-        NONNEGATIVE(write(STDOUT_FILENO, &len, sizeof(len)));
-        NONNEGATIVE(write(STDOUT_FILENO, buf, len));
-    }
-
-    return 0;
+    C_SYSCALL(n);
+    uint32_t len = (uint32_t)n;
+    C_SYSCALL(write(STDOUT_FILENO, &orig_fd, sizeof(orig_fd)));
+    C_SYSCALL(write(STDOUT_FILENO, &len, sizeof(len)));
+    C_SYSCALL(write(STDOUT_FILENO, buf, len));
 }
 
 static char **
@@ -186,67 +100,101 @@ construct_cmdl(int cmdl, char *cmd[], char *prog)
 int
 main(int argc, char *argv[])
 {
-    if (argc < 5) {
-        fprintf(stderr, "usage: runner basedir overlaydir sourcefile cmdl..\n");
-        return EXIT_FAILURE;
-    }
+    if (argc < 5) ERROR("usage: runner basedir overlaydir sourcefile cmdl..\n");
 
     char *root = poe_init_playground(argv[1], argv[2]);
     char *prog = poe_copy_program_to_playground(root, argv[3]);
     char **cmdl = construct_cmdl(argc - 4, argv + 4, prog);
 
-    int stdout_fd[2], stderr_fd[2];
-    NONNEGATIVE(pipe2(stdout_fd, O_DIRECT));
-    NONNEGATIVE(pipe2(stderr_fd, O_DIRECT));
+    int stdout_fd[2], stderr_fd[2], errfd[2];
+    C_SYSCALL(pipe2(stdout_fd, O_DIRECT));
+    C_SYSCALL(pipe2(stderr_fd, O_DIRECT));
+    C_SYSCALL(pipe2(errfd, O_DIRECT|O_CLOEXEC));
+
+    // init cgroup: create root hierarchy and setup controllers
+    poe_cgroup_init();
 
     // TODO: CLONE_NEWUSER
-    pid_t pid = (pid_t)syscall(SYS_clone, SIGCHLD | CLONE_NEWIPC | CLONE_NEWNS | CLONE_NEWPID | CLONE_NEWUTS | CLONE_NEWNET, 0);
-    NONNEGATIVE(pid);
-
-    if (pid == 0) {
+    pid_t pid = (pid_t)syscall(SYS_clone, SIGCHLD|CLONE_NEWIPC|CLONE_NEWNS|CLONE_NEWPID|CLONE_NEWUTS|CLONE_NEWNET, 0);
+    if (pid < 0) {
+        ERROR("clone failed");
+    } else if (!pid) {
         dup2(stdout_fd[1], STDOUT_FILENO);
         close(stdout_fd[0]);
         close(stdout_fd[1]);
         dup2(stderr_fd[1], STDERR_FILENO);
         close(stderr_fd[0]);
         close(stderr_fd[1]);
+        close(errfd[0]); // errfd[1] will be closed by O_CLOEXEC
 
-        child(root, cmdl);
+        poe_do_child(root, cmdl, errfd[1]);
     } else {
-        sd_event *event = NULL;
-        uint64_t now;
-        int stdout_fileno = STDOUT_FILENO;
-        int stderr_fileno = STDERR_FILENO;
-
-        int fflags;
-        fflags = fcntl(stdout_fd[0], F_GETFL, 0);
-        NONNEGATIVE(fflags);
-        NONNEGATIVE(fcntl(stdout_fd[0], F_SETFL, fflags | O_NONBLOCK));
-        fflags = fcntl(stderr_fd[0], F_GETFL, 0);
-        NONNEGATIVE(fflags);
-        NONNEGATIVE(fcntl(stderr_fd[0], F_SETFL, fflags | O_NONBLOCK));
+        int epoll_fd = epoll_create1(0);
+        C_SYSCALL(epoll_fd);
 
         sigset_t mask;
         sigemptyset(&mask);
         sigaddset(&mask, SIGCHLD);
         sigaddset(&mask, SIGINT);
         sigaddset(&mask, SIGTERM);
+        sigaddset(&mask, SIGHUP);
         sigprocmask(SIG_BLOCK, &mask, NULL);
+        int signal_fd = signalfd(-1, &mask, 0);
+        C_SYSCALL(signal_fd);
 
-        NONNEGATIVE(sd_event_default(&event));
-        NONNEGATIVE(sd_event_add_signal(event, NULL, SIGCHLD, sigchld_handler, &pid));
-        NONNEGATIVE(sd_event_add_signal(event, NULL, SIGINT, sigint_handler, &pid));
-        NONNEGATIVE(sd_event_add_signal(event, NULL, SIGTERM, sigint_handler, &pid));
-        NONNEGATIVE(sd_event_now(event, CLOCK_MONOTONIC, &now));
-        NONNEGATIVE(sd_event_add_time(event, NULL, CLOCK_MONOTONIC, now + POE_TIME_LIMIT, 0, timer_handler, &pid));
-        NONNEGATIVE(sd_event_add_io(event, NULL, stdout_fd[0], EPOLLIN, stdout_handler, &stdout_fileno));
-        NONNEGATIVE(sd_event_add_io(event, NULL, stderr_fd[0], EPOLLIN, stdout_handler, &stderr_fileno));
+        int timer_fd = timerfd_create(CLOCK_MONOTONIC, 0);
+        C_SYSCALL(timer_fd);
+        C_SYSCALL(timerfd_settime(timer_fd, 0, &(struct itimerspec) { .it_value.tv_sec = POE_TIME_LIMIT }, NULL));
 
-        NONNEGATIVE(ptrace(PTRACE_SEIZE, pid, NULL, PTRACE_O_TRACECLONE | PTRACE_O_TRACEFORK | PTRACE_O_TRACESECCOMP | PTRACE_O_TRACEVFORK));
+#define ADD(_fd__) C_SYSCALL(epoll_ctl(epoll_fd, EPOLL_CTL_ADD, _fd__, &(struct epoll_event) { .data.fd = _fd__, .events = EPOLLIN }))
+        ADD(signal_fd);
+        ADD(timer_fd);
+        ADD(errfd[0]);
+        ADD(stdout_fd[0]);
+        ADD(stderr_fd[0]);
 
-        poe_init_systemd(pid);
+        C_SYSCALL(ptrace(PTRACE_SEIZE, pid, NULL, PTRACE_O_TRACECLONE | PTRACE_O_TRACEFORK | PTRACE_O_TRACESECCOMP | PTRACE_O_TRACEVFORK));
 
-        NONNEGATIVE(sd_event_loop(event));
+        poe_cgroup_add(pid);
+        if (atexit(poe_cgroup_destroy)) ERROR("atexit (cgroup) failed");
+        if (atexit(poe_destroy_playground)) ERROR("atexit (playground) failed");
+
+        while (true) {
+            struct epoll_event events[10];
+            int n = epoll_wait(epoll_fd, events, sizeof(events) / sizeof(events[0]), -1);
+            C_SYSCALL(n);
+
+            for (int i = 0; i < n; i++) {
+                struct epoll_event *ev = &events[i];
+                if (ev->events & EPOLLERR) {
+                    // fd closed
+                    if (ev->data.fd == errfd[0]) {
+                        char buf[PIPE_BUF];
+                        ssize_t nx = read(errfd[0], buf, sizeof(buf));
+                        if (nx > 0) ERROR("child err: %s", strndupa(buf, nx));
+                    }
+                    close(ev->data.fd);
+                }
+
+                if (ev->events & EPOLLIN) {
+                    if (ev->data.fd == stdout_fd[0]) {
+                        handle_stdout(ev->data.fd, STDOUT_FILENO);
+                    } else if (ev->data.fd == stderr_fd[0]) {
+                        handle_stdout(ev->data.fd, STDERR_FILENO);
+                    } else if (ev->data.fd == signal_fd) {
+                        struct signalfd_siginfo si;
+                        if (sizeof(si) != read(signal_fd, &si, sizeof(si)))
+                            ERROR("partial read signalfd");
+                        handle_signal(pid, &si);
+                    } else if (ev->data.fd == timer_fd) {
+                        handle_timer(pid);
+                    } else if (ev->data.fd == errfd[0]) {
+                        // ignore
+                        continue;
+                    }
+                }
+            }
+        }
     }
 
     UNREACHABLE();

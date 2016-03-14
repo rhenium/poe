@@ -23,29 +23,29 @@ poe_init_playground(const char *base, const char *env)
 {
     struct stat s;
     if (stat(POE_TEMPORARY_BASE, &s) == -1) {
-        NONNEGATIVE(mkdir(POE_TEMPORARY_BASE, 0755));
+        C_SYSCALL(mkdir(POE_TEMPORARY_BASE, 0755));
     }
 
     // setup base (tmpfs)
-    NONNEGATIVE(asprintf(&workbase, POE_TEMPORARY_BASE "/%ld", (long)getpid()));
+    C_SYSCALL(asprintf(&workbase, POE_TEMPORARY_BASE "/%ld", (long)getpid()));
     if (stat(workbase, &s) != -1) {
-        NONNEGATIVE(rmrf(workbase));
+        C_SYSCALL(rmrf(workbase));
     }
-    NONNEGATIVE(mkdir(workbase, 0755));
-    NONNEGATIVE(mount(NULL, workbase, "tmpfs", MS_NOSUID, "size=32m")); // TODO
+    C_SYSCALL(mkdir(workbase, 0755));
+    C_SYSCALL(mount(NULL, workbase, "tmpfs", MS_NOSUID, "size=32m")); // TODO
 
-    NONNEGATIVE(asprintf(&workdir, "%s/work", workbase));
-    NONNEGATIVE(mkdir(workdir, 0755));
+    C_SYSCALL(asprintf(&workdir, "%s/work", workbase));
+    C_SYSCALL(mkdir(workdir, 0755));
 
-    NONNEGATIVE(asprintf(&upperdir, "%s/upper", workbase));
-    NONNEGATIVE(mkdir(upperdir, 0755));
+    C_SYSCALL(asprintf(&upperdir, "%s/upper", workbase));
+    C_SYSCALL(mkdir(upperdir, 0755));
 
-    NONNEGATIVE(asprintf(&mergeddir, "%s/merged", workbase));
-    NONNEGATIVE(mkdir(mergeddir, 0755));
+    C_SYSCALL(asprintf(&mergeddir, "%s/merged", workbase));
+    C_SYSCALL(mkdir(mergeddir, 0755));
 
     char *opts = NULL;
-    NONNEGATIVE(asprintf(&opts, "lowerdir=%s:%s,upperdir=%s,workdir=%s", env, base, upperdir, workdir));
-    NONNEGATIVE(mount(NULL, mergeddir, "overlay", MS_NOSUID, opts));
+    C_SYSCALL(asprintf(&opts, "lowerdir=%s:%s,upperdir=%s,workdir=%s", env, base, upperdir, workdir));
+    C_SYSCALL(mount(NULL, mergeddir, "overlay", MS_NOSUID, opts));
 
     return mergeddir;
 }
@@ -57,8 +57,7 @@ poe_copy_program_to_playground(const char *root, const char *progpath)
     if (!src) ERROR("could not open src");
 
     char *newrel = "/tmp/prog";
-    char * fullpath = (char *)malloc(strlen(root) + strlen(newrel) + 1);
-    NONNULL(fullpath);
+    char fullpath[strlen(root) + strlen(newrel) + 1];
     strcpy(fullpath, root);
     strcat(fullpath, newrel);
 

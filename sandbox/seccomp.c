@@ -6,7 +6,7 @@ void
 poe_seccomp_init(void)
 {
     assert(syscall(SYS_getpid) == 1);
-    scmp_filter_ctx ctx = seccomp_init(SCMP_ACT_TRACE(0));
+    scmp_filter_ctx ctx = seccomp_init(SCMP_ACT_TRACE(0)); /* for a workaround, we can't kill TRACEd process, so default to KILL */
     if (!ctx) ERROR("seccomp_init() failed");
 
     for (int i = 0; i < syscall_rules_count; i++) {
@@ -20,7 +20,7 @@ poe_seccomp_init(void)
     seccomp_release(ctx);
 }
 
-void
+char *
 poe_seccomp_handle_syscall(pid_t pid, unsigned long edata)
 {
     assert(syscall(SYS_getpid) != 1);
@@ -37,7 +37,7 @@ kill:
     kill(pid, SIGKILL);
     char *rule = seccomp_syscall_resolve_num_arch(SCMP_ARCH_NATIVE, syscalln);
     if (!rule) ERROR("seccomp_syscall_resolve_num_arch() failed");
-    FINISH(POE_SIGNALED, -1, "System call %s is blocked", rule);
+    return rule;
 /*allowed:
     ptrace(PTRACE_CONT, pid, 0, 0);*/
 }
