@@ -36,6 +36,7 @@ static const struct syscall_rule syscall_rules[] = {
     // safe
     ALLOW(futex),
     ALLOW(exit),
+    ALLOW(pause),
     ALLOW(pipe),
     ALLOW(pipe2),
     ALLOW(brk),
