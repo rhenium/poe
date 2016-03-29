@@ -59,13 +59,24 @@ poe_cgroup_init(void)
 
     /* then, configure it */
     cgroup_config(POE_CGROUP_ROOT, "cgroup.subtree_control", "+memory +pids");
+
+    /* create sub group */
+    struct stat sb;
+    if (stat(POE_CGROUP_ROOT"/poe", &sb)) {
+        if (errno == ENOENT) {
+            if (mkdir(POE_CGROUP_ROOT"/poe"))
+                ERROR("can't create sub cgroup");
+        } else {
+            ERROR("can't access sub cgroup");
+        }
+    }
 }
 
 void
 poe_cgroup_add(pid_t pid)
 {
-    if (cgroup_created) ERROR("poe_cgroup_add called twice");
-    char *template = strdup(POE_CGROUP_ROOT"/poe-sandbox-XXXXXX");
+    assert(!cgroup_created);
+    char *template = strdup(POE_CGROUP_ROOT"/poe/poe-sandbox-XXXXXX");
     if (!mkdtemp(template)) ERROR("child cgroup create failed");
     cgroup_config_int(template, "cgroup.procs", pid);
     // enable this when Linux 4.6 released, which will include cpu controller
@@ -92,6 +103,12 @@ poe_cgroup_destroy(void)
 void
 poe_cgroup_unmount(void)
 {
+    assert(!cgroup_created);
+    struct stat sb;
+    if (stat(POE_CGROUP_ROOT"/poe", &sb))
+        ERROR("can't access sub cgroup");
+    if (rmdir(POE_CGROUP_ROOT"/poe"))
+        ERROR("can't rmdir sub cgroup");
     if (umount(POE_CGROUP_ROOT) == -1)
         ERROR("cgroup umount error: %s", strerror(errno));
 }

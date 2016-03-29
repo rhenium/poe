@@ -60,5 +60,3 @@ poe_do_child(const char *root, char **cmd, int errorfd_w_)
     // errorfd_w will be closed by O_CLOEXEC
     C_SYSCALL(execvpe(cmd[0], cmd, env));
 }
-
-
