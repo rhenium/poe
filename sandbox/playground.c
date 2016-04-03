@@ -121,6 +121,12 @@ int poe_playground_init_command_line(struct playground *pg, char **cmdl, const c
 		return error("could not copy src to dst");
 	}
 
+	if (fchown(dst, POE_UID, POE_GID)) {
+		close(src);
+		close(dst);
+		return error("could not chown dst");
+	}
+
 	close(src);
 	close(dst);
 
