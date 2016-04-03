@@ -4,59 +4,67 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-// 親プロセスへ通知するための fd
-// 何かが書き込まれた場合、親はエラーが発生したとみなす
-// 何も書き込まれずに閉じられた場合、正常に exec に移行したとみなす
-static int errorfd_w;
-
-// override ERROR function
-// stop until signal: should be killed, never returns
-#define ERROR(...) do { \
-    dprintf(errorfd_w, __VA_ARGS__); \
-    pause(); \
-    abort(); \
+#define checked_syscall(s) do { \
+	if ((s) < 0) \
+		bug("CRITICAL: %s:%d %s", __FILE__, __LINE__, #s); \
 } while (0)
 
-void
-poe_do_child(const char *root, char **cmd, int errorfd_w_)
+noreturn void poe_child_do(struct playground *pg,
+		int stdout_fd[2], int stderr_fd[2], int child_fd[2])
 {
-    errorfd_w = errorfd_w_;
-    if (syscall(SYS_getpid) != 1) ERROR("not in PID NS");
+	if (dup2(child_fd[1], STDERR_FILENO) < 0)
+		// 標準エラー出力に出ちゃうけどしかたない
+		bug("dup2 child_fd_w to stdout failed");
 
-    // kill self if parent died
-    C_SYSCALL(prctl(PR_SET_PDEATHSIG, SIGKILL, 0, 0, 0));
+	if (atexit(abort))
+		bug("atexit failed");
+	if (syscall(SYS_getpid) != 1)
+		bug("not in PID NS");
 
-    C_SYSCALL(mount("none", "/", NULL, MS_PRIVATE|MS_REC, NULL)); // mount --make-rprivate /
-    C_SYSCALL(mount(root, root, "bind", MS_BIND|MS_REC, NULL));
-    C_SYSCALL(chroot(root));
-    C_SYSCALL(mount("none", "/proc", "proc", MS_NOSUID|MS_NOEXEC|MS_NODEV, NULL));
-    // TODO: /dev/null, ...
+	// kill self if parent died
+	checked_syscall(prctl(PR_SET_PDEATHSIG, SIGKILL, 0, 0, 0));
 
-    C_SYSCALL(sethostname(POE_HOSTNAME, strlen(POE_HOSTNAME)));
-    struct passwd *pw = getpwnam(POE_USERNAME);
-    if (!pw) ERROR("getpwnam() failed");
+	checked_syscall(mount("none", "/", NULL, MS_PRIVATE|MS_REC, NULL)); // mount --make-rprivate /
+	checked_syscall(mount(pg->mergeddir, pg->mergeddir, "bind", MS_BIND|MS_REC, NULL));
+	checked_syscall(chroot(pg->mergeddir));
+	checked_syscall(mount("none", "/proc", "proc", MS_NOSUID|MS_NOEXEC|MS_NODEV, NULL));
+	// TODO: /dev/null, ...
 
-    C_SYSCALL(chdir("/tmp"));
-    C_SYSCALL(setsid());
-    gid_t grps[] = { POE_GID };
-    C_SYSCALL(setgroups(1, grps)); // set supplementary group IDs
-    C_SYSCALL(setresgid(POE_GID, POE_GID, POE_GID));
-    C_SYSCALL(setresuid(POE_UID, POE_UID, POE_UID));
+	checked_syscall(sethostname(POE_HOSTNAME, strlen(POE_HOSTNAME)));
+	struct passwd *pw = getpwnam(POE_USERNAME);
+	if (!pw)
+		bug("getpwnam() failed");
 
-    // wait parent
-    raise(SIGSTOP);
+	checked_syscall(chdir("/tmp"));
+	checked_syscall(setsid());
+	gid_t grps[] = { POE_GID };
+	checked_syscall(setgroups(1, grps)); // set supplementary group IDs
+	checked_syscall(setresgid(POE_GID, POE_GID, POE_GID));
+	checked_syscall(setresuid(POE_UID, POE_UID, POE_UID));
 
-    C_SYSCALL(prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0));
-    poe_seccomp_init();
+	// wait parent
+	raise(SIGSTOP);
 
-    char *env[] = {
-        "PATH=/opt/bin:/usr/bin",
-        "USER=" POE_USERNAME,
-        "LOGNAME=" POE_USERNAME,
-        "HOME=/tmp",
-        NULL
-    };
+	checked_syscall(prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0));
+	if (poe_seccomp_init())
+		bug("seccomp init failed");
 
-    // errorfd_w will be closed by O_CLOEXEC
-    C_SYSCALL(execvpe(cmd[0], cmd, env));
+	if (close(child_fd[0]) || close(child_fd[1]))
+		bug("close child_fds failed");
+	if (dup2(stdout_fd[1], STDOUT_FILENO) < 0 || close(stdout_fd[0]) || close(stdout_fd[1]))
+		bug("dup2/close stdout failed");
+	if (dup2(stderr_fd[1], STDERR_FILENO) < 0 || close(stderr_fd[0]) || close(stderr_fd[1]))
+		bug("dup2/close stderr failed");
+
+	char *const env[] = {
+		"PATH=/opt/bin:/usr/bin",
+		"USER=" POE_USERNAME,
+		"LOGNAME=unyapoe",
+		"HOME=/tmp",
+		NULL
+	};
+
+	checked_syscall(execvpe(pg->command_line[0], pg->command_line, env));
+
+	bug("unreachable");
 }

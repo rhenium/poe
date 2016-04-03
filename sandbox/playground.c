@@ -1,103 +1,132 @@
 #include "sandbox.h"
 
-static char *workbase = NULL;
-static char *upperdir = NULL;
-static char *workdir = NULL;
-static char *mergeddir = NULL;
-
-static int
-rmrf_cb(const char *fpath, const struct stat *sb, int typeflag, struct FTW *ftwbuf)
+static int rmrf_cb(const char *fpath, unused const struct stat *sb,
+		unused int typeflag, unused struct FTW *ftwbuf)
 {
-    (void)sb; (void)typeflag; (void)ftwbuf;
-    return remove(fpath);
+	return remove(fpath);
 }
 
-static int
-rmrf(const char *path)
+static int rmrf(const char *path)
 {
-    return nftw(path, rmrf_cb, 64, FTW_DEPTH | FTW_PHYS);
+	return nftw(path, rmrf_cb, 64, FTW_DEPTH | FTW_PHYS);
 }
 
-char *
-poe_init_playground(const char *base, const char *env)
+static void destroy_playground(unused int status, void *pg_)
 {
-    struct stat s;
-    if (stat(POE_TEMPORARY_BASE, &s) == -1) {
-        C_SYSCALL(mkdir(POE_TEMPORARY_BASE, 0755));
-    }
+	struct playground *pg = (struct playground *)pg_;
+	struct stat s;
 
-    // setup base (tmpfs)
-    C_SYSCALL(asprintf(&workbase, POE_TEMPORARY_BASE "/%ld", (long)getpid()));
-    if (stat(workbase, &s) != -1) {
-        C_SYSCALL(rmrf(workbase));
-    }
-    C_SYSCALL(mkdir(workbase, 0755));
-    C_SYSCALL(mount(NULL, workbase, "tmpfs", MS_NOSUID, "size=32m")); // TODO
+	if (pg->mergeddir) {
+		umount(pg->mergeddir);
+		rmrf(pg->mergeddir);
+	}
+	if (pg->workdir && !stat(pg->workdir, &s)) {
+		rmrf(pg->workdir);
+	}
+	if (pg->upperdir && !stat(pg->upperdir, &s)) {
+		rmrf(pg->upperdir);
+	}
+	if (pg->workbase && !stat(pg->workbase, &s)) {
+		umount(pg->workbase);
+		rmrf(pg->workbase);
+	}
 
-    C_SYSCALL(asprintf(&workdir, "%s/work", workbase));
-    C_SYSCALL(mkdir(workdir, 0755));
-
-    C_SYSCALL(asprintf(&upperdir, "%s/upper", workbase));
-    C_SYSCALL(mkdir(upperdir, 0755));
-
-    C_SYSCALL(asprintf(&mergeddir, "%s/merged", workbase));
-    C_SYSCALL(mkdir(mergeddir, 0755));
-
-    char *opts = NULL;
-    C_SYSCALL(asprintf(&opts, "lowerdir=%s:%s,upperdir=%s,workdir=%s", env, base, upperdir, workdir));
-    C_SYSCALL(mount(NULL, mergeddir, "overlay", MS_NOSUID, opts));
-
-    return mergeddir;
+	free(pg->workbase);
+	free(pg->upperdir);
+	free(pg->workdir);
+	free(pg->mergeddir);
+	// command_line は free しない
+	free(pg);
 }
 
-char *
-poe_copy_program_to_playground(const char *root, const char *progpath)
+struct playground *poe_playground_init(const char *base, const char *env)
 {
-    FILE *src = fopen(progpath, "rb");
-    if (!src) ERROR("could not open src");
+	struct playground *pg = xcalloc(1, sizeof(struct playground));
+	if (on_exit(destroy_playground, pg))
+		bug("on_exit failed");
 
-    char *newrel = "/tmp/prog";
-    char fullpath[strlen(root) + strlen(newrel) + 1];
-    strcpy(fullpath, root);
-    strcat(fullpath, newrel);
+	struct stat s;
+	if (stat(POE_TEMPORARY_BASE, &s) && mkdir(POE_TEMPORARY_BASE, 0755)) {
+		error("mkdir temporary base error");
+		return NULL;
+	}
 
-    FILE *dst = fopen(fullpath, "wb");
-    if (!dst) ERROR("could not open dst");
+	// setup base (tmpfs)
+	pg->workbase = xformat(POE_TEMPORARY_BASE"/%ld", (long)getpid());
+	if (!stat(pg->workbase, &s) && rmrf(pg->workbase)) {
+		error("workbase cleanup failed");
+		return NULL;
+	}
+	if (mkdir(pg->workbase, 0755) ||
+			mount(NULL, pg->workbase, "tmpfs", MS_NOSUID, "size=32m")) {
+		error("mount workbase failed");
+		return NULL;
+	}
 
-    char buf[1024];
-    int n;
-    while ((n = fread(buf, sizeof(buf[0]), sizeof(buf), src)) > 0) {
-        if (!fwrite(buf, sizeof(buf[0]), n, dst)) ERROR("failed fwrite");
-    }
+	pg->workdir = xformat("%s/work", pg->workbase);
+	if (mkdir(pg->workdir, 0755)) {
+		error("mkdir workdir failed");
+		return NULL;
+	}
 
-    fclose(dst);
-    fclose(src);
-    chmod(fullpath, 0644);
+	pg->upperdir = xformat("%s/upper", pg->workbase);
+	if (mkdir(pg->upperdir, 0755)) {
+		error("mkdir upperdir failed");
+		return NULL;
+	}
 
-    return newrel;
+	pg->mergeddir = xformat("%s/merged", pg->workbase);
+	if (mkdir(pg->mergeddir, 0755)) {
+		error("mkdir mergeddir failed");
+		return NULL;
+	}
+
+	char *opts = xformat("lowerdir=%s:%s,upperdir=%s,workdir=%s",
+			env, base, pg->upperdir, pg->workdir);
+	if (mount(NULL, pg->mergeddir, "overlay", MS_NOSUID, opts)) {
+		free(opts);
+		error("mount overlay failed");
+		return NULL;
+	}
+	free(opts);
+
+	return pg;
 }
 
-
-void
-poe_destroy_playground()
+int poe_playground_init_command_line(struct playground *pg, char **cmdl, const char *progpath)
 {
-    struct stat s;
-    if (mergeddir) {
-        umount(mergeddir);
-        rmrf(mergeddir);
-        free(mergeddir);
-    }
-    if (workdir && stat(workdir, &s) != -1) {
-        rmrf(workdir);
-        free(workdir);
-    }
-    if (upperdir && stat(upperdir, &s) != -1) {
-        rmrf(upperdir);
-        free(upperdir);
-    }
-    if (workbase && stat(workbase, &s) != -1) {
-        umount(workbase);
-        rmrf(workbase);
-        free(workbase);
-    }
+	int src = open(progpath, O_RDONLY);
+	if (src < 0)
+		return error("could not open src");
+
+	const char *prog_rel = "/tmp/prog";
+	char *fullpath = xformat("%s%s", pg->mergeddir, prog_rel);
+	int dst = open(fullpath, O_RDWR | O_CREAT, 0644);
+	free(fullpath);
+	if (dst < 0) {
+		close(src);
+		return error("could not open dst");
+	}
+
+	struct stat sb;
+	if (fstat(src, &sb)) {
+		close(src);
+		close(dst);
+		return error("could not fstat src");
+	}
+
+	if (sendfile(dst, src, NULL, sb.st_size) != sb.st_size) {
+		close(src);
+		close(dst);
+		return error("could not copy src to dst");
+	}
+
+	close(src);
+	close(dst);
+
+	char **curr = cmdl;
+	do if (!strcmp("{}", *curr)) *curr = xstrdup(prog_rel); while (*++curr);
+	pg->command_line = cmdl;
+
+	return 0;
 }

@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <inttypes.h>
 #include <stdarg.h>
 #include <string.h>
 #include <stdbool.h>
@@ -28,62 +29,48 @@
 #include <sys/mount.h>
 #include <sys/reg.h>
 #include <sys/prctl.h>
+#include <sys/ptrace.h>
 #include <sys/syscall.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/sendfile.h>
+#include <sys/epoll.h>
+#include <sys/timerfd.h>
+#include <sys/signalfd.h>
 
-#define UNREACHABLE() __builtin_unreachable()
-#define C_SYSCALL(s) if ((s) < 0) ERROR("CRITICAL: %s:%d %s", __FILE__, __LINE__, #s)
+#define noreturn _Noreturn
+#define unused __attribute__((__unused__))
+#define warn_unused __attribute__((warn_unused_result))
 
 enum poe_exit_reason {
-    POE_SUCCESS,
-    POE_SIGNALED,
-    POE_TIMEDOUT,
+	POE_SUCCESS,
+	POE_SIGNALED,
+	POE_TIMEDOUT,
 };
 
-static void
-ERROR(const char *fmt, ...)
-{
-    va_list args;
-    va_start(args, fmt);
-    vfprintf(stderr, fmt, args);
-    va_end(args);
-    exit(1);
-}
-
-void FINISH(enum poe_exit_reason, int, const char *, ...);
-
-enum poe_handler_result {
-    POE_PROHIBITED,
-    POE_HANDLED,
-    POE_ALLOWED
+struct playground {
+	char *workbase;
+	char *upperdir;
+	char *workdir;
+	char *mergeddir;
+	char **command_line;
 };
-
-struct syscall_rule {
-    int syscall;
-    uint32_t action;
-};
-
-void poe_seccomp_init(void);
-char *poe_seccomp_handle_syscall(pid_t, unsigned long);
-void poe_cgroup_init(void);
-void poe_cgroup_add(pid_t);
-void poe_cgroup_destroy(void);
-void poe_cgroup_unmount(void);
-
-char *poe_init_playground(const char *, const char *);
-char *poe_copy_program_to_playground(const char *, const char *);
-void poe_destroy_playground(void);
-
-void poe_do_child(const char *, char **, int);
-
-static void __attribute__ ((unused))
-print_backtrace(void)
-{
-    void *trace[128];
-    int n = backtrace(trace, sizeof(trace) / sizeof(trace[0]));
-    backtrace_symbols_fd(trace, n, 2);
-}
 
 #include "config.h"
+#include "utils.h"
+
+// seccomp.c
+warn_unused int poe_seccomp_init(void);
+char *poe_seccomp_syscall_resolve(int);
+
+// cgroup.c
+warn_unused int poe_cgroup_init(void);
+warn_unused int poe_cgroup_add(pid_t);
+
+// playground.c
+warn_unused struct playground *poe_playground_init(const char *, const char *);
+warn_unused int poe_playground_init_command_line(struct playground *, char **, const char *);
+
+noreturn void poe_child_do(struct playground *, int[2], int[2], int[2]);
+
 #endif
