@@ -3,9 +3,9 @@
 
 #define POE_DEBUG 1
 
-#define POE_TEMPORARY_BASE "/work/poe/sandbox/tmp"
+#define POE_TEMPORARY_BASE "/tmp/poe"
 #define POE_CGROUP_ROOT POE_TEMPORARY_BASE"/cgroup"
-#define POE_USERNAME "nobody"
+#define POE_USERNAME "unyapoe"
 #define POE_HOSTNAME "poe-sandbox"
 #define POE_MEMORY_LIMIT (1024ULL * 1024ULL * 128ULL)
 #define POE_TASKS_LIMIT 32

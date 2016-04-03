@@ -59,7 +59,7 @@ noreturn void poe_child_do(struct playground *pg,
 	char *const env[] = {
 		"PATH=/opt/bin:/usr/bin",
 		"USER=" POE_USERNAME,
-		"LOGNAME=unyapoe",
+		"LOGNAME=" POE_USERNAME,
 		"HOME=/tmp",
 		NULL
 	};
