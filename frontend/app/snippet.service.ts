@@ -64,10 +64,14 @@ export class SnippetService {
   }
 
   private urlEncode(obj: Object): string {
-    let urlSearchParams = new URLSearchParams();
+    let out = "";
     for (let key in obj) {
-      urlSearchParams.append(key, obj[key]);
+      const c = encodeURIComponent(key) + "=" + encodeURIComponent(obj[key]);
+      if (out === "")
+        out = c;
+      else
+        out += "&" + c;
     }
-    return urlSearchParams.toString();
+    return out;
   }
 }
