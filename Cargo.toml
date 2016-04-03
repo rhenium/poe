@@ -9,6 +9,7 @@ default = []
 [dependencies]
 iron = "*"
 router = "*"
+logger = "*"
 rustc-serialize = "*"
 rust-crypto = "*"
 uuid = "*"

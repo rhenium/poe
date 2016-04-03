@@ -5,6 +5,7 @@
 extern crate byteorder;
 extern crate iron;
 extern crate router;
+extern crate logger;
 extern crate uuid;
 extern crate time;
 extern crate rustc_serialize;
@@ -13,6 +14,7 @@ use iron::prelude::*;
 use iron::{AfterMiddleware, status};
 use iron::modifier::Modifier;
 use router::Router;
+use logger::Logger;
 use rustc_serialize::json::ToJson;
 use std::io::Read;
 
@@ -114,10 +116,14 @@ fn main() {
     router.post("/api/snippet/run", snippet_run);
     router.get("/api/snippet/:sid/:cid/stdout", results_stdout);
 
-    let mut middleware = Chain::new(router);
-    middleware.link_after(Recoverer);
+    let (logger_before, logger_after) = Logger::new(None);
+
+    let mut chain = Chain::new(router);
+    chain.link_before(logger_before);
+    chain.link_after(Recoverer);
+    chain.link_after(logger_after);
 
     let host = SocketAddrV4::new(Ipv4Addr::new(127, 0, 0, 1), 3000);
     println!("listening on http://{}", host);
-    Iron::new(middleware).http(host).unwrap();
+    Iron::new(chain).http(host).unwrap();
 }
