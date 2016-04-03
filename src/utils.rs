@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 use std::iter::FromIterator;
+use uuid;
+use error::RequestError;
 
 #[inline(always)]
 fn from_hex(byte: u8) -> Option<u8> {
@@ -31,7 +33,7 @@ fn percent_decode(s: &str) -> Vec<u8> {
     out
 }
 
-pub fn parse_post_raw(orig: String) -> HashMap<Vec<u8>, Vec<u8>> {
+pub fn parse_post_raw(orig: &str) -> HashMap<Vec<u8>, Vec<u8>> {
     HashMap::from_iter(
         orig.split('&')
         .filter_map(|i| {
@@ -43,18 +45,21 @@ pub fn parse_post_raw(orig: String) -> HashMap<Vec<u8>, Vec<u8>> {
         }))
 }
 
-pub fn parse_post(orig: String) -> HashMap<String, String> {
-    HashMap::from_iter(
-        parse_post_raw(orig)
+pub fn parse_post(orig: &str) -> Result<HashMap<String, String>, RequestError> {
+    let vals: Result<Vec<_>, RequestError> = parse_post_raw(&orig)
         .into_iter()
-        .filter_map(|ent| {
-            let (k8, v8) = ent;
-            if let (Ok(k), Ok(v)) = (String::from_utf8(k8), String::from_utf8(v8)) {
-                Some((k, v))
+        .map(|ent| {
+            if let (Ok(k), Ok(v)) = (String::from_utf8(ent.0), String::from_utf8(ent.1)) {
+                Ok((k, v))
             } else {
-                None
+                Err(RequestError::BadRequest.into())
             }
-        }))
+        }).collect();
+    Ok(HashMap::from_iter(vals?))
+}
+
+pub fn uuid() -> String {
+    uuid::Uuid::new_v4().to_simple_string()
 }
 
 #[macro_export]

@@ -1,5 +1,6 @@
 #![feature(plugin)]
 #![feature(custom_derive)]
+#![feature(question_mark)]
 
 extern crate byteorder;
 extern crate iron;
@@ -17,6 +18,7 @@ use std::io::Read;
 
 use std::net::*;
 use std::collections::BTreeMap;
+use std::collections::HashMap;
 use std::ascii::AsciiExt;
 
 mod error;
@@ -34,15 +36,21 @@ impl Modifier<Response> for Snippet {
     }
 }
 
-fn snippet_create(req: &mut Request) -> IronResult<Response> {
+fn read_post_form(req: &mut Request) -> Result<HashMap<String, String>, RequestError> {
     let mut body = String::new();
-    try!(req.body.read_to_string(&mut body).map_err(|_|RequestError::BadRequest));
+    if let Err(_) = req.body.read_to_string(&mut body) {
+        return Err(RequestError::BadRequest);
+    }
 
-    let form = utils::parse_post(body);
+    Ok(utils::parse_post(&body)?)
+}
+
+fn snippet_create(req: &mut Request) -> IronResult<Response> {
+    let form = read_post_form(req)?;
     match (form.get("lang"), form.get("code")) {
         (Some(lang_), Some(code)) => {
             let lang = lang_.to_ascii_lowercase();
-            let snip = try!(Snippet::create(&lang, &code));
+            let snip = Snippet::create(&lang, &code)?;
             Ok(Response::with((status::Created, snip)))
         },
         _ => Err(RequestError::BadRequest.into())
@@ -52,21 +60,18 @@ fn snippet_create(req: &mut Request) -> IronResult<Response> {
 fn snippet_show(req: &mut Request) -> IronResult<Response> {
     let router = req.extensions.get::<Router>().unwrap();
     match router.find("sid") {
-        Some(sid) => Ok(Response::with((status::Ok, try!(Snippet::find(sid))))),
+        Some(sid) => Ok(Response::with((status::Ok, Snippet::find(sid)?))),
         None => Err(RequestError::BadRequest.into())
     }
 }
 
 fn snippet_run(req: &mut Request) -> IronResult<Response> {
-    let mut body = String::new();
-    try!(req.body.read_to_string(&mut body).map_err(|_|RequestError::BadRequest));
-
-    let form = utils::parse_post(body);
+    let form = read_post_form(req)?;
     match (form.get("sid"), form.get("cid")) {
         (Some(sid), Some(cid)) => {
-            let snip = try!(Snippet::find(&sid));
-            let comp = try!(config::compiler(&snip.metadata.lang, &cid).ok_or(RequestError::NotFound));
-            try!(comp.run(&snip));
+            let snip = Snippet::find(&sid)?;
+            let comp = config::compiler(&snip.metadata.lang, &cid).ok_or(RequestError::NotFound)?;
+            comp.run(&snip)?;
             Ok(Response::with((status::Ok, run_result::open_render(&snip, &comp).to_string())))
         },
         _ => Err(RequestError::BadRequest.into())
@@ -77,8 +82,8 @@ fn results_stdout(req: &mut Request) -> IronResult<Response> {
     let router = req.extensions.get::<Router>().unwrap();
     match (router.find("sid"), router.find(":cid")) {
         (Some(sid), Some(cid)) => {
-            let snip = try!(Snippet::find(sid));
-            let comp = try!(config::compiler(&snip.metadata.lang, cid).ok_or(RequestError::NotFound));
+            let snip = Snippet::find(sid)?;
+            let comp = config::compiler(&snip.metadata.lang, cid).ok_or(RequestError::NotFound)?;
             let stdout = run_result::read_stdout_raw(&snip, &comp);
             Ok(Response::with((status::Ok, stdout)))
         },

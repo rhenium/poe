@@ -92,11 +92,11 @@ pub fn parse_and_save(snip: &Snippet, comp: &Compiler, output: Output) -> Result
         let trunc = output.stdout.len() > output_limit;
         let meta = RunResultMetadata { exit: exit, result: reason, message: msg_str.into_owned(), truncated: trunc };
 
-        let mut meta_file = try!(fs::File::create(format!("{}/results/{}.json", &snip.basedir(), &comp.id)));
-        try!(meta_file.write(json::encode(&meta).unwrap().as_bytes()));
+        let mut meta_file = fs::File::create(format!("{}/results/{}.json", &snip.basedir(), &comp.id))?;
+        meta_file.write(json::encode(&meta).unwrap().as_bytes())?;
 
-        let mut out_file = try!(fs::File::create(format!("{}/results/{}.output", &snip.basedir(), &comp.id)));
-        try!(out_file.write(if trunc { &output.stdout[..output_limit] } else { &output.stdout }));
+        let mut out_file = fs::File::create(format!("{}/results/{}.output", &snip.basedir(), &comp.id))?;
+        out_file.write(if trunc { &output.stdout[..output_limit] } else { &output.stdout })?;
 
         Ok(())
     } else {

@@ -4,7 +4,7 @@ use std::io;
 use rustc_serialize::json;
 use iron;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum PoeError {
     NotFound,
     Unknown(String),
@@ -30,7 +30,10 @@ impl Error for PoeError {
 
 impl From<io::Error> for PoeError {
     fn from(e: io::Error) -> Self {
-        PoeError::Unknown(e.description().to_string())
+        match e.kind() {
+            io::ErrorKind::NotFound => PoeError::NotFound,
+            _ => PoeError::Unknown(e.description().to_string())
+        }
     }
 }
 
@@ -52,7 +55,7 @@ impl<'a> From<&'a str> for PoeError {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum RequestError {
     BadRequest,
     NotFound,
