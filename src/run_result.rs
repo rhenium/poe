@@ -50,16 +50,16 @@ pub fn read_stdout_raw(snip: &Snippet, comp: &Compiler) -> Vec<u8> {
     out
 }
 
-fn read_output_str(snip: &Snippet, comp: &Compiler) -> Vec<(u8, String)> {
+fn read_output_str(snip: &Snippet, comp: &Compiler) -> Vec<(u32, String)> {
     read_output_raw(&snip, &comp).iter().map(|pair| {
         (pair.0, String::from_utf8_lossy(&pair.1).into_owned())
     }).collect()
 }
 
-fn read_output_raw(snip: &Snippet, comp: &Compiler) -> Vec<(u8, Vec<u8>)> {
-    let f = |out: &mut Vec<(u8, Vec<u8>)>| {
+fn read_output_raw(snip: &Snippet, comp: &Compiler) -> Vec<(u32, Vec<u8>)> {
+    let f = |out: &mut Vec<(u32, Vec<u8>)>| {
         let mut out_file = stry!(fs::File::open(format!("{}/results/{}.output", &snip.basedir(), &comp.id)));
-        while let Ok(fd) = out_file.read_u8() {
+        while let Ok(fd) = out_file.read_u32::<LittleEndian>() {
             let len = stry!(out_file.read_u32::<LittleEndian>());
             if len > 1024 * 1024 { return Err("broken input?".to_string()); } // TODO
             let mut body = vec![0; len as usize];
@@ -70,8 +70,8 @@ fn read_output_raw(snip: &Snippet, comp: &Compiler) -> Vec<(u8, Vec<u8>)> {
     };
 
     let mut out = vec![];
-    if f(&mut out).is_err() {
-        // TODO: show err?
+    if let Err(err) = f(&mut out) {
+        println!("{}", err);
     }
     out
 }
