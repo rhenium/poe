@@ -87,3 +87,7 @@ pre code {
 
 .result-fd-1 { }
 .result-fd-2 { color: red; }
+
+editor .CodeMirror-gutters {
+  height: 100% !important;
+}
