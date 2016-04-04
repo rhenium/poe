@@ -49,6 +49,21 @@ namespace :compiler do
         system("curl -o archive.tar.gz #{Shellwords.escape(url)}") or raise("failed to download")
         system("tar xf archive.tar.gz") or raise("failed to extract")
         FileUtils.chdir("ruby-#{version}") {
+          patch_ccnames = ["ruby", "ruby/#{version.split("-")[0]}", "ruby/#{version.split("-").join("/")}"]
+          patch_ccnames.each { |patch_ccname|
+            rvm_patchsets_path = File.expand_path("../vendor/rvm/patchsets/#{patch_ccname}/default", __FILE__)
+            if File.exist?(rvm_patchsets_path)
+              puts "RVM patchset found (#{patch_ccname})... applying..."
+              patches = File.read(rvm_patchsets_path).lines.map(&:chomp)
+              patches.each { |patch|
+                patch_path = patch_ccnames
+                  .map { |pp| File.expand_path("../vendor/rvm/patches/#{pp}/#{patch}.patch", __FILE__) }
+                  .find(&File.method(:exist?))
+                patch_path and system("patch -R -p1 --silent --dry-run <#{patch_path} || patch -p1 <#{patch_path}") or
+                  raise("failed to apply patch")
+              }
+            end
+          }
           retriable {
             system("./configure --prefix=#{prefix} --enable-shared --disable-install-doc") or raise("failed to configure")
             system("make -j6") or raise("failed to make")

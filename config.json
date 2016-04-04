@@ -23,6 +23,13 @@
           "/opt/bin/ruby",
           "{}"
         ]
+      },
+      "ruby-1.9.3-p551": {
+        "version": "ruby 1.9.3p551 (2014-11-13 revision 48407) [x86_64-linux]",
+        "commandline": [
+          "/opt/bin/ruby",
+          "{}"
+        ]
       }
     },
     "php": {
