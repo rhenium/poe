@@ -6,67 +6,6 @@ body {
   margin: 0;
 }
 
-.navbar {
-  margin-bottom: 20px;
-  border: 1px solid #e7e7e7;
-  border-width: 0 0 1px;
-  background-color: #f8f8f8;
-  padding: 0 30px;
-  display: flex;
-  align-items: center;
-}
-
-.navbar .brand {
-  flex-grow: 1;
-  padding: 15px 0;
-  font-size: 18px;
-}
-
-.navbar ul {
-  list-style: none;
-  margin: 0;
-  display: flex;
-  align-items: center;
-}
-
-.navbar ul li {
-  display: block;
-}
-
-.navbar a {
-  color: #777777;
-  text-decoration: none;
-}
-
-.container {
-  padding: 0 15px;
-}
-
-/* begin .panel */
-.panel {
-  margin: 20px 0;
-  border: 1px solid #dddddd;
-  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
-}
-
-.panel .panel-heading {
-  padding: 10px 15px;
-  border-bottom: 1px solid;
-  border-color: inherit;
-}
-
-.panel .panel-body {
-  padding: 15px;
-}
-
-.panel-success, .panel-success .panel-heading { border-color: #d6e9c6; }
-.panel-success .panel-heading { color: #3c763d; background-color: #dff0d8; }
-.panel-failure, .panel-failure .panel-heading { border-color: #ebccd1; }
-.panel-failure .panel-heading { color: #a94442; background-color: #f2dede; }
-.panel-running, .panel-running .panel-heading { border-color: #dddddd; }
-.panel-running .panel-heading { color: #333333; background-color: #f5f5f5; }
-/* end panel */
-
 pre {
   display: block;
   padding: 10px;
@@ -76,43 +15,110 @@ pre {
   border: 1px solid #cccccc;
   background-color: #f5f5f5;
   overflow-x: auto;
+
+  code {
+    font-family: monospace;
+  }
 }
 
-pre code {
-  font-family: monospace;
+.container {
+  padding: 0 15px;
 }
 
-.result-items-container .result-item:not(:last-child) {
-  border-bottom: none;
-  margin-bottom: 0;
+.navbar {
+  margin-bottom: 20px;
+  border: 1px solid #e7e7e7;
+  border-width: 0 0 1px;
+  background-color: #f8f8f8;
+  padding: 0 30px;
+  display: flex;
+  align-items: center;
+
+  .brand {
+    flex-grow: 1;
+    padding: 15px 0;
+    font-size: 18px;
+  }
+
+  a {
+    color: #777777;
+    text-decoration: none;
+  }
+
+  ul {
+    list-style: none;
+    margin: 0;
+    display: flex;
+    align-items: center;
+
+    li {
+      display: block;
+    }
+  }
 }
 
-.result-item {
-  margin-top: 0;
+.panel {
+  margin: 20px 0;
+  border: 1px solid #dddddd;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+
+  .panel-heading {
+    padding: 10px 15px;
+    border-bottom: 1px solid;
+    border-color: inherit;
+  }
+
+  .panel-body {
+    padding: 15px;
+  }
+
+  .panel-success, .panel-success .panel-heading { border-color: #d6e9c6; }
+  .panel-success .panel-heading { color: #3c763d; background-color: #dff0d8; }
+  .panel-failure, .panel-failure .panel-heading { border-color: #ebccd1; }
+  .panel-failure .panel-heading { color: #a94442; background-color: #f2dede; }
+  .panel-running, .panel-running .panel-heading { border-color: #dddddd; }
+  .panel-running .panel-heading { color: #333333; background-color: #f5f5f5; }
 }
 
-.result-item.result-item-collapsed .panel-heading:before {
-  display: inline-block;
-  width: 1em;
-  content: "▸";
+/* EDITOR *************************************************/
+editor .CodeMirror-gutters {
+  height: 100% !important;
 }
 
-.result-item:not(.result-item-collapsed) .panel-heading:before {
-  display: inline-block;
-  width: 1em;
-  content: "▾";
-}
+/* RESULT *************************************************/
+.result-items-container {
+  .result-item {
+    margin-top: 0;
 
-.result-item-collapsed .panel-body {
-  display: none;
+    &:not(:last-child) {
+      border-bottom: none;
+      margin-bottom: 0;
+    }
+
+    &.result-item-collapsed {
+      .panel-heading:before {
+        display: inline-block;
+        width: 1em;
+        content: "▸";
+      }
+
+      .panel-body {
+        display: none;
+      }
+    }
+
+    &:not(.result-item-collapsed) {
+      .panel-heading:before {
+        display: inline-block;
+        width: 1em;
+        content: "▾";
+      }
+    }
+  }
 }
 
 .result-exit { color: orange; }
 .result-info { color: white; background-color: black; }
 
-.result-fd-1 { }
+.result-fd-1 { color: black; }
 .result-fd-2 { color: red; }
-
-editor .CodeMirror-gutters {
-  height: 100% !important;
-}
