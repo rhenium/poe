@@ -59,9 +59,8 @@ export class AppComponent {
     this.editing = _edit_service.get();
     _router.subscribe(path => {
       let title = "poe: online ruby environment";
-      if (path !== "") {
-        title = path + " - " + title;
-      }
+      if (path !== "")
+        title = "poe: " + path;
       _title.setTitle(title);
     });
   }
