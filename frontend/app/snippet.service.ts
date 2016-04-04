@@ -17,6 +17,15 @@ export class Result {
     public output: any[],
     public _: any,
     public truncated: boolean) { }
+
+  public static compareOutput(a: Result, b: Result) {
+    return a.result === b.result &&
+      a.exit === b.exit &&
+      a.message === b.message &&
+      a.output && b.output &&
+      a.output.every((c, i) => b.output[i] && c[0] === b.output[i][0] && c[1] === b.output[i][1]) &&
+      a.truncated === b.truncated;
+  }
 }
 
 export class Snippet {

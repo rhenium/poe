@@ -51,7 +51,7 @@ body {
 
 .panel .panel-heading {
   padding: 10px 15px;
-  border-bottom: 1px solid transparent;
+  border-bottom: 1px solid;
   border-color: inherit;
 }
 
@@ -59,11 +59,11 @@ body {
   padding: 15px;
 }
 
-.panel-success { border-color: #d6e9c6; }
+.panel-success, .panel-success .panel-heading { border-color: #d6e9c6; }
 .panel-success .panel-heading { color: #3c763d; background-color: #dff0d8; }
-.panel-failure { border-color: #ebccd1; }
+.panel-failure, .panel-failure .panel-heading { border-color: #ebccd1; }
 .panel-failure .panel-heading { color: #a94442; background-color: #f2dede; }
-.panel-running { border-color: #dddddd; }
+.panel-running, .panel-running .panel-heading { border-color: #dddddd; }
 .panel-running .panel-heading { color: #333333; background-color: #f5f5f5; }
 /* end panel */
 
@@ -80,6 +80,31 @@ pre {
 
 pre code {
   font-family: monospace;
+}
+
+.result-items-container .result-item:not(:last-child) {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.result-item {
+  margin-top: 0;
+}
+
+.result-item.result-item-collapsed .panel-heading:before {
+  display: inline-block;
+  width: 1em;
+  content: "▸";
+}
+
+.result-item:not(.result-item-collapsed) .panel-heading:before {
+  display: inline-block;
+  width: 1em;
+  content: "▾";
+}
+
+.result-item-collapsed .panel-body {
+  display: none;
 }
 
 .result-exit { color: orange; }

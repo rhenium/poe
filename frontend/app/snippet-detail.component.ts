@@ -5,12 +5,14 @@ import {EditingData, EditingDataService} from "./editing-data.service";
 
 @Component({
   template: `
-    <div class="result-item panel"
-        *ngFor="#r of snippet.results.slice().reverse()"
-        [ngClass]="{'panel-success': isSuccess(r), 'panel-failure': isFailure(r), 'panel-running': isRunning(r)}">
-      <div class="panel-heading">{{r.compiler.id}} ({{r.compiler.version}})</div>
-      <div class="panel-body">
-        <pre><code [innerHTML]="formatted_output(r)"></code></pre>
+    <div class="result-items-container">
+      <div class="result-item panel"
+          *ngFor="#r of snippet.results.slice().reverse(); #i = index"
+          [ngClass]="{'panel-success': isSuccess(r), 'panel-failure': isFailure(r), 'panel-running': isRunning(r), 'result-item-collapsed': isHiddenIdx(i)}">
+        <div class="panel-heading" (click)="toggleHiddenIdx(i)">{{r.compiler.id}} ({{r.compiler.version}})</div>
+        <div class="panel-body">
+          <pre><code [innerHTML]="formatted_output(r)"></code></pre>
+        </div>
       </div>
     </div>
   `,
@@ -29,6 +31,7 @@ export class SnippetDetailComponent implements OnInit {
     this._service.getSnippet(sid).subscribe(
       snip => {
         this.snippet = snip;
+        this.updateHiddenList();
         this._edit_service.fromSnippet(snip);
         this.runRemaining();
       },
@@ -87,11 +90,34 @@ export class SnippetDetailComponent implements OnInit {
     return r.result === null;
   }
 
+  updateHiddenList() {
+    let list = [];
+    let prev = null;
+    for (let i = this.snippet.results.length - 1; i >= 0; i--) {
+      let curr = this.snippet.results[i];
+      list.push(prev && Result.compareOutput(prev, curr));
+      prev = curr;
+    }
+    this.hidden_list = list.reverse();
+  }
+
+  isHiddenIdx(i: int) {
+    return this.hidden_list[i];
+  }
+
+  toggleHiddenIdx(i: int) {
+    this.hidden_list[i] = !this.hidden_list[i];
+  }
+
+
   runRemaining() {
     this.snippet.results.forEach((r, i, a) => {
       if (r.result === null) {
         this._service.runSnippet(this.snippet, r.compiler).subscribe(
-          res => a[i] = res,
+          res => {
+            a[i] = res;
+            this.updateHiddenList();
+          },
           err => console.log(err)
         );
       }
