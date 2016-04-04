@@ -8,7 +8,8 @@ import {HTTP_PROVIDERS} from "angular2/http";
 import {AppComponent} from "./app.component"
 
 declare var ENV: any;
-if (typeof ENV !== "undefined" && ENV === "production") enableProdMode();
+if (typeof ENV !== "undefined" && ENV === "production")
+  enableProdMode();
 
 bootstrap(AppComponent, [
   ROUTER_PROVIDERS,

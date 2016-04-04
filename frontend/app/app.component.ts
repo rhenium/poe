@@ -16,11 +16,11 @@ import {EditorComponent} from "./editor.component";
   template: `
     <nav class="navbar">
       <div class="brand">
-        <a class="navbar-brand" [routerLink]="['Home']">Poe</a>
+        <a class="navbar-brand" href="#">snippet: {{editing.summarize()}}</a>
       </div>
-      <!--<ul>
-        <li><a href="/about">about</a></li>
-      </ul>-->
+      <ul>
+        <li><a href="/">about poe</a></li>
+      </ul>
     </nav>
     <div class="container">
       <div class="panel panel-default">
@@ -55,13 +55,11 @@ export class AppComponent {
     private _service: SnippetService,
     private _router: Router,
     _edit_service: EditingDataService,
-    _title: Title) {
+    private _title: Title) {
     this.editing = _edit_service.get();
-    _router.subscribe(path => {
-      let title = "poe: online ruby environment";
-      if (path !== "")
-        title = "poe: " + path;
-      _title.setTitle(title);
+    this.editing.onChange(e => {
+      const summary = this.editing.summarize();
+      this._title.setTitle("poe: " + summary);
     });
   }
 
