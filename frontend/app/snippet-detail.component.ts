@@ -90,14 +90,14 @@ export class SnippetDetailComponent implements OnInit {
   }
 
   updateHiddenList() {
-    let list = [];
+    this.hidden_list = [];
     let prev = null;
-    for (let i = this.snippet.results.length - 1; i >= 0; i--) {
-      let curr = this.snippet.results[i];
-      list.push(prev && Result.compareOutput(prev, curr));
+    this.snippet.results.slice().reverse().forEach((curr, i) => {
+      if (prev)
+        this.hidden_list.push(Result.compareOutput(prev, curr));
       prev = curr;
-    }
-    this.hidden_list = list.reverse();
+    });
+    this.hidden_list.push(false);
   }
 
   isHiddenIdx(i: number) {
