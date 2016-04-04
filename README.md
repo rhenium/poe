@@ -16,6 +16,8 @@ frontend (TypeScript):
 
 ## Installation
 
+**仮想マシン上で実行することを強くお勧めします**
+
 ~~~sh
 % git clone -b ⚙ https://github.com/rhenium/poe.git && cd poe
 
