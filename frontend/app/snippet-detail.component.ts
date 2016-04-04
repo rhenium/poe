@@ -19,6 +19,7 @@ import {EditingData, EditingDataService} from "./editing-data.service";
 })
 export class SnippetDetailComponent implements OnInit {
   snippet = new Snippet("", "", "", -1, []);
+  hidden_list = [];
 
   constructor(
     private _router: Router,
@@ -99,11 +100,11 @@ export class SnippetDetailComponent implements OnInit {
     this.hidden_list = list.reverse();
   }
 
-  isHiddenIdx(i: int) {
+  isHiddenIdx(i: number) {
     return this.hidden_list[i];
   }
 
-  toggleHiddenIdx(i: int) {
+  toggleHiddenIdx(i: number) {
     this.hidden_list[i] = !this.hidden_list[i];
   }
 
