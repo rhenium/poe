@@ -16,11 +16,11 @@ import {EditorComponent} from "./editor.component";
   template: `
     <nav class="navbar">
       <div class="brand">
-        <a class="navbar-brand" href="#">snippet: {{editing.summarize()}}</a>
+        <a class="navbar-brand" href="#">{{generateHeader()}}</a>
       </div>
-      <ul>
+      <!--<ul>
         <li><a href="/">about poe</a></li>
-      </ul>
+      </ul>-->
     </nav>
     <div class="container">
       <div class="panel panel-default">
@@ -29,7 +29,7 @@ import {EditorComponent} from "./editor.component";
             <div class="form-group" id="code-field">
               <editor (onSubmit)="onSubmit()" [(value)]="editing.code" [mode]="editing.lang"></editor>
             </div>
-            <div class="form-inline">
+            <div class="form-group form-inline">
               <select class="form-control" [(ngModel)]="editing.lang" required>
                 <option *ngFor="#p of availableLangs()" [value]="p">{{p}}</option>
               </select>
@@ -57,10 +57,7 @@ export class AppComponent {
     _edit_service: EditingDataService,
     private _title: Title) {
     this.editing = _edit_service.get();
-    this.editing.onChange(e => {
-      const summary = this.editing.summarize();
-      this._title.setTitle("poe: " + summary);
-    });
+    this.editing.onChange(e => this._title.setTitle(this.generateTitle()));
   }
 
   onSubmit() {
@@ -73,5 +70,17 @@ export class AppComponent {
   // これなんとかならない？
   availableLangs() {
     return EditingData.availableLangs;
+  }
+
+  generateHeader() {
+    const summary = this.editing.summarize();
+    if (summary === "")
+      return "poe: eval in 30+ Ruby interpreters";
+    else
+      return summary;
+  }
+
+  generateTitle() {
+    return this.generateHeader() + " - poe";
   }
 }
