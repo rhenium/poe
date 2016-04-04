@@ -3,9 +3,11 @@
   "version": "1.0.0",
   "license": "MIT",
   "scripts": {
-    "start": "concurrently \"npm run tsc:w\" \"npm run lite\"",
+    "start": "concurrently \"npm run tsc:w\" \"npm run sass:w\" \"npm run lite\"",
     "tsc": "tsc",
     "tsc:w": "tsc -w",
+    "sass": "node-sass -x poe.scss dist/poe.css",
+    "sass:w": "node-sass -x -w poe.scss dist/poe.css",
     "lite": "lite-server",
     "typings": "typings",
     "postinstall": "typings install"
@@ -24,6 +26,7 @@
     "clean-css": "^3.4.11",
     "concurrently": "^2.0.0",
     "lite-server": "^2.1.0",
+    "node-sass": "^3.4.2",
     "proxy-middleware": "^0.15.0",
     "systemjs-builder": "^0.15.14",
     "typescript": "^1.8.9",

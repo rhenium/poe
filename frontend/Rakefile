@@ -78,5 +78,7 @@ end
 
 task :compile do
   puts "Running tsc...."
-  system "tsc" || exit(1)
+  system "npm tsc" || exit(1)
+  puts "Running node-sass...."
+  system "npm sass" || exit(1)
 end
