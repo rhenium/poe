@@ -23,17 +23,17 @@ import {EditorComponent} from "./editor.component";
       </ul>-->
     </nav>
     <div class="container">
-      <div class="panel panel-default">
+      <div id="editor" class="panel">
         <div class="panel-body">
           <form (ngSubmit)="onSubmit()">
-            <div class="form-group" id="code-field">
+            <div class="form-group" id="editor-editor">
               <editor (onSubmit)="onSubmit()" [(value)]="editing.code" [mode]="editing.lang"></editor>
             </div>
-            <div class="form-group form-inline">
-              <select class="form-control" [(ngModel)]="editing.lang" required>
+            <div class="form-group container" id="editor-options">
+              <select class="button dropdown-button" [(ngModel)]="editing.lang" required>
                 <option *ngFor="#p of availableLangs()" [value]="p">{{p}}</option>
               </select>
-              <button class="btn btn-default" type="submit">Run</button>
+              <button class="button default-button" type="submit">{{editing.lang}} /tmp/prog</button>
             </div>
           </form>
         </div>

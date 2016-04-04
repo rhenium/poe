@@ -10,7 +10,7 @@ import {EditingData, EditingDataService} from "./editing-data.service";
           *ngFor="#r of snippet.results.slice().reverse(); #i = index"
           [ngClass]="{'panel-success': isSuccess(r), 'panel-failure': isFailure(r), 'panel-running': isRunning(r), 'result-item-collapsed': isHiddenIdx(i)}">
         <div class="panel-heading" (click)="toggleHiddenIdx(i)">{{r.compiler.id}} ({{r.compiler.version}})</div>
-        <div class="panel-body">
+        <div class="panel-body container">
           <pre><code [innerHTML]="formatted_output(r)"></code></pre>
         </div>
       </div>
@@ -53,7 +53,7 @@ export class SnippetDetailComponent implements OnInit {
     if (r.truncated) {
       str += "<span class=\"result-info\">[truncated]</span>";
     } else if (r.output.length === 0 || !r.output[r.output.length - 1][1].endsWith("\n")) {
-      str += "<span class=\"result-info\">%\n</span>";
+      str += "<span class=\"result-missing-newline\">%\n</span>";
     }
 
     if (r.result === 0) { // Success

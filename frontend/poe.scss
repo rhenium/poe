@@ -22,11 +22,10 @@ pre {
 }
 
 .container {
-  padding: 0 15px;
+  padding: 15px;
 }
 
 .navbar {
-  margin-bottom: 20px;
   border: 1px solid #e7e7e7;
   border-width: 0 0 1px;
   background-color: #f8f8f8;
@@ -58,7 +57,7 @@ pre {
 }
 
 .panel {
-  margin: 20px 0;
+  margin: 0 0 20px;
   border: 1px solid #dddddd;
   box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
 
@@ -69,20 +68,60 @@ pre {
   }
 
   .panel-body {
-    padding: 15px;
+    /*padding: 15px;*/
   }
-
-  .panel-success, .panel-success .panel-heading { border-color: #d6e9c6; }
-  .panel-success .panel-heading { color: #3c763d; background-color: #dff0d8; }
-  .panel-failure, .panel-failure .panel-heading { border-color: #ebccd1; }
-  .panel-failure .panel-heading { color: #a94442; background-color: #f2dede; }
-  .panel-running, .panel-running .panel-heading { border-color: #dddddd; }
-  .panel-running .panel-heading { color: #333333; background-color: #f5f5f5; }
 }
 
+.panel-success, .panel-success .panel-heading { border-color: #d6e9c6; }
+.panel-success .panel-heading { color: #3c763d; background-color: #dff0d8; }
+.panel-failure, .panel-failure .panel-heading { border-color: #ebccd1; }
+.panel-failure .panel-heading { color: #a94442; background-color: #f2dede; }
+.panel-running, .panel-running .panel-heading { border-color: #dddddd; }
+.panel-running .panel-heading { color: #333333; background-color: #f5f5f5; }
+
 /* EDITOR *************************************************/
-editor .CodeMirror-gutters {
-  height: 100% !important;
+#editor {
+  #editor-editor {
+    border-bottom: 1px solid #dddddd;
+
+    /* なぜが gutter の高さがいっぱいになってくれない */
+    .CodeMirror-gutters {
+      height: 100% !important;
+    }
+  }
+
+  #editor-options {
+    .button {
+      overflow: visible;
+      padding: 0 12px;
+      height: 32px;
+      vertical-align: middle;
+      display: inline-block;
+      font-size: 14px;
+      border-radius: 0;
+      cursor: pointer;
+      outline: 0 !important;
+      color: #333333;
+      border: 1px solid #cccccc;
+      background-color: #ffffff;
+
+      &:hover {
+        background-color: #e6e6e6;
+        border-color: #adadad;
+      }
+    }
+
+    .default-button {
+      color: #ffffff;
+      background-color: #337ab7;
+      border-color: #2e6da4;
+
+      &:hover {
+        background-color: #286090;
+        border-color: #204d74;
+      }
+    }
+  }
 }
 
 /* RESULT *************************************************/
@@ -117,8 +156,7 @@ editor .CodeMirror-gutters {
   }
 }
 
-.result-exit { color: orange; }
-.result-info { color: white; background-color: black; }
-
 .result-fd-1 { color: black; }
 .result-fd-2 { color: red; }
+.result-exit { color: orange; }
+.result-missing-newline { color: white; background-color: black; }

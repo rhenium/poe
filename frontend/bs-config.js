@@ -10,7 +10,7 @@ module.exports = {
   injectChanges: false,
   ui: { port: 3002 },
   port: 3001,
-  files: ["./app/**/*.js", "./*.html", "./*.css"],
+  files: ["./app/**/*.js", "./*.html", "./dist/**/*"],
   server: {
     baseDir: "./",
     middleware: [

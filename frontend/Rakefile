@@ -17,7 +17,7 @@ $deps = [
 
 $copies = [
   "index.html",
-  "poe.css",
+  "dist/poe.css",
 ]
 
 $minify = <<EOF
@@ -62,7 +62,7 @@ task :deploy => [:prepare, :compile] do
   puts "Copying static files...."
   $copies.each { |copy|
     puts "Copying #{copy}"
-    FileUtils.cp(File.join($root, copy), $destdir)
+    FileUtils.cp(File.join($root, copy), File.join($destdir, copy))
   }
 end
 
@@ -78,7 +78,7 @@ end
 
 task :compile do
   puts "Running tsc...."
-  system "npm tsc" || exit(1)
+  system "npm run tsc" || exit(1)
   puts "Running node-sass...."
-  system "npm sass" || exit(1)
+  system "npm run sass" || exit(1)
 end
