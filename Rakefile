@@ -22,7 +22,7 @@ rescue
   puts "An error occurred: #{$!}"
   puts "Current directory: #{`pwd`}"
   print "Press a key to retry:"
-  read
+  $stdin.getch
   retry
 end
 
