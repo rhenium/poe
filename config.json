@@ -16,6 +16,13 @@
           "/opt/bin/ruby",
           "{}"
         ]
+      },
+      "ruby-2.1.10": {
+        "version": "ruby 2.1.10p492 (2016-04-01 revision 54464) [x86_64-linux]",
+        "commandline": [
+          "/opt/bin/ruby",
+          "{}"
+        ]
       }
     },
     "php": {
