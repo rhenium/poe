@@ -9,7 +9,7 @@ import {EditingData, EditingDataService} from "./editing-data.service";
       <div class="result-item panel"
           *ngFor="#r of snippet.results.slice().reverse(); #i = index"
           [ngClass]="{'panel-success': isSuccess(r), 'panel-failure': isFailure(r), 'panel-running': isRunning(r), 'result-item-collapsed': isHiddenIdx(i)}">
-        <div class="panel-heading" (click)="toggleHiddenIdx(i)">{{r.compiler.id}} ({{r.compiler.version}})</div>
+        <div class="panel-heading" (click)="toggleHiddenIdx(i)">{{r.compiler.id}} ({{r.compiler.version}}) {{r.elapsed / 1000}}ms</div>
         <div class="panel-body container">
           <pre><code [innerHTML]="formatted_output(r)"></code></pre>
         </div>

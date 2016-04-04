@@ -1,9 +1,21 @@
 #include "sandbox.h"
 
+static struct timespec start_timespec = { 0 };
+
 static noreturn void finish(enum poe_exit_reason reason, int status, const char *fmt, ...)
 {
+	if (!start_timespec.tv_sec && !start_timespec.tv_nsec)
+		bug("start_timespec not set?");
+	struct timespec end_timespec;
+	if (clock_gettime(CLOCK_MONOTONIC, &end_timespec))
+		bug("clock_gettime failed");
+	uint64_t elapsed =
+		(uint64_t)(end_timespec.tv_sec - start_timespec.tv_sec) * 1000 * 1000 +
+		(end_timespec.tv_nsec - start_timespec.tv_nsec) / 1000;
+
 	int xx[] = { reason, status };
 	fwrite(xx, sizeof(int), 2, stderr);
+	fwrite(&elapsed, sizeof(uint64_t), 1, stderr);
 	if (fmt) {
 		va_list args;
 		va_start(args, fmt);
@@ -103,6 +115,9 @@ int main(int argc, char *argv[])
 		bug("unreachable");
 	}
 
+	if (close(stdout_fd[1]) || close(stderr_fd[1]) || close(child_fd[1]))
+		bug("close child write pipe failed");
+
 	int epoll_fd = epoll_create1(0);
 	if (epoll_fd < 0)
 		bug("epoll_create1 failed");
@@ -124,7 +139,7 @@ int main(int argc, char *argv[])
 	if (timerfd_settime(timer_fd, 0, &(struct itimerspec) { .it_value.tv_sec = POE_TIME_LIMIT }, NULL))
 		bug("timerfd_settime failed");
 
-#define ADD(_fd__) do if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, _fd__, &(struct epoll_event) { .data.fd = _fd__, .events = EPOLLIN })) \
+#define ADD(_fd__) do if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, _fd__, &(struct epoll_event) { .data.fd = _fd__, .events = EPOLLRDHUP|EPOLLIN })) \
 	bug("EPOLL_CTL_ADD failed"); while (0)
 	ADD(signal_fd);
 	ADD(timer_fd);
@@ -150,10 +165,6 @@ int main(int argc, char *argv[])
 
 		for (int i = 0; i < n; i++) {
 			struct epoll_event *ev = &events[i];
-			if (ev->events & EPOLLERR) {
-				// fd closed
-				close(ev->data.fd);
-			}
 			if (ev->events & EPOLLIN) {
 				if (ev->data.fd == stdout_fd[0]) {
 					handle_stdout(ev->data.fd, STDOUT_FILENO);
@@ -172,6 +183,14 @@ int main(int argc, char *argv[])
 					if (nx > 0) // TODO
 						die("child err: %s", strndupa(buf, nx));
 				}
+			}
+			if (ev->events & EPOLLERR || ev->events & EPOLLHUP || ev->events & EPOLLRDHUP) {
+				// fd closed
+				close(ev->data.fd);
+				if (ev->data.fd == child_fd[0])
+					// exec succeeded
+					if (clock_gettime(CLOCK_MONOTONIC, &start_timespec))
+						bug("clock_gettime failed");
 			}
 		}
 	}

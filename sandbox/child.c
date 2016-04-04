@@ -49,8 +49,7 @@ noreturn void poe_child_do(struct playground *pg,
 	if (poe_seccomp_init())
 		bug("seccomp init failed");
 
-	if (close(child_fd[0]) || close(child_fd[1]))
-		bug("close child_fds failed");
+	// child_fd は exec によって close される
 	if (dup2(stdout_fd[1], STDOUT_FILENO) < 0 || close(stdout_fd[0]) || close(stdout_fd[1]))
 		bug("dup2/close stdout failed");
 	if (dup2(stderr_fd[1], STDERR_FILENO) < 0 || close(stderr_fd[0]) || close(stderr_fd[1]))

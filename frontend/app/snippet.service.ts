@@ -13,6 +13,7 @@ export class Result {
     public compiler: Compiler,
     public result: number,
     public exit: number,
+    public elapsed: number,
     public message: string,
     public output: any[],
     public _: any,
