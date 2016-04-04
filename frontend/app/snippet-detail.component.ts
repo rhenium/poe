@@ -43,30 +43,28 @@ export class SnippetDetailComponent implements OnInit {
   formatted_output(r: Result): string {
     if (this.isRunning(r)) return "Running...";
     if (r._) return r._; // うーーーーーーーーーーん💩
-    let haveNewLine = false;
     let str = r.output.reduce((str, pair) => {
       let fd = pair[0];
       let escaped = this.escapeHTML(pair[1]);
-      haveNewLine = pair[1].endsWith("\n");
       return str + "<span class=\"result-fd-" + fd + "\">" + escaped + "</span>";
     }, "");
 
     if (r.truncated) {
-      str += "<span class=\"result-info\">[truncated]</span>"
-    } else if (!haveNewLine) {
-      str += "<span class=\"result-info\">%</span>"
+      str += "<span class=\"result-info\">[truncated]</span>";
+    } else if (r.output.length === 0 || !r.output[r.output.length - 1][1].endsWith("\n")) {
+      str += "<span class=\"result-info\">%\n</span>";
     }
 
     if (r.result === 0) { // Success
       if (r.exit !== 0) {
-        str += "\n<span class=\"result-exit\">Process exited with status " + r.exit + "</span>";
+        str += "<span class=\"result-exit\">Process exited with status " + r.exit + "</span>";
       }
     } else if (r.result === 1) { // Signaled
       if (r.message.length > 0) {
-        str += "\n<span class=\"result-exit\">" + this.escapeHTML(r.message) + "</span>";
+        str += "<span class=\"result-exit\">" + this.escapeHTML(r.message) + "</span>";
       }
     } else if (r.result === 2) {
-      str += "\n<span class=\"result-exit\">" + this.escapeHTML("Time limit exceeded") + "</span>";
+      str += "<span class=\"result-exit\">" + this.escapeHTML("Time limit exceeded") + "</span>";
     }
 
     r._ = str;
