@@ -20,7 +20,7 @@ def add_compiler(lang, id, val)
   list = $tmp_config["compilers"][lang] || {}
   list[id] = val
   $tmp_config["compilers"][lang] = list.sort.reverse.to_h
-  File.write($config_file, JSON.pretty_generate($tmp_config))
+  File.write($config_file, JSON.pretty_generate($tmp_config) + "\n")
 end
 
 def retriable
@@ -88,8 +88,8 @@ namespace :compiler do
           }
 
           add_compiler("ruby", id, {
-            version_command: "#{prefix}/bin/ruby -v",
             version: `LD_LIBRARY_PATH=#{destdir}#{prefix}/lib #{destdir}#{prefix}/bin/ruby -v`.lines.first.chomp,
+            version_command: "#{prefix}/bin/ruby -v",
             commandline: ["#{prefix}/bin/ruby", "{}"]
           })
         }
@@ -124,8 +124,8 @@ namespace :compiler do
           }
 
           add_compiler("php", id, {
-            version_command: "#{prefix}/bin/php -v",
             version: `LD_LIBRARY_PATH=#{destdir}#{prefix}/lib #{destdir}#{prefix}/bin/php -v`.lines.first.chomp,
+            version_command: "#{prefix}/bin/php -v",
             commandline: ["#{prefix}/bin/php", "{}"]
           })
         }
