@@ -57,6 +57,7 @@ pub fn load() {
                         id: pcid.to_string(),
                         lang: lang.clone(),
                         version: conf.find("version").unwrap().as_string().unwrap().to_string(),
+                        version_command: conf.find("version_command").unwrap().as_string().unwrap().to_string(),
                         commandline: conf.find("commandline").unwrap().as_array().unwrap().iter().map(|j| j.as_string().unwrap().to_string()).collect(),
                     })
                 }).collect::<Vec<_>>());

@@ -88,6 +88,7 @@ namespace :compiler do
           }
 
           add_compiler("ruby", id, {
+            version_command: "#{prefix}/bin/ruby -v",
             version: `LD_LIBRARY_PATH=#{destdir}#{prefix}/lib #{destdir}#{prefix}/bin/ruby -v`.lines.first.chomp,
             commandline: ["#{prefix}/bin/ruby", "{}"]
           })
@@ -123,6 +124,7 @@ namespace :compiler do
           }
 
           add_compiler("php", id, {
+            version_command: "#{prefix}/bin/php -v",
             version: `LD_LIBRARY_PATH=#{destdir}#{prefix}/lib #{destdir}#{prefix}/bin/php -v`.lines.first.chomp,
             commandline: ["#{prefix}/bin/php", "{}"]
           })

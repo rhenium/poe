@@ -5,6 +5,7 @@
     "ruby": {
       "ruby-snapshot": {
         "version": "ruby 2.4.0dev (2016-04-02 trunk 54474) [x86_64-linux]",
+        "version_command": "/opt/bin/ruby -v",
         "commandline": [
           "/opt/bin/ruby",
           "{}"
@@ -12,6 +13,7 @@
       },
       "ruby-2.3.0": {
         "version": "ruby 2.3.0p0 (2015-12-25 revision 53290) [x86_64-linux]",
+        "version_command": "/opt/bin/ruby -v",
         "commandline": [
           "/opt/bin/ruby",
           "{}"
@@ -19,6 +21,7 @@
       },
       "ruby-2.2.4": {
         "version": "ruby 2.2.4p230 (2015-12-16 revision 53155) [x86_64-linux]",
+        "version_command": "/opt/bin/ruby -v",
         "commandline": [
           "/opt/bin/ruby",
           "{}"
@@ -26,6 +29,7 @@
       },
       "ruby-2.2.3": {
         "version": "ruby 2.2.3p173 (2015-08-18 revision 51636) [x86_64-linux]",
+        "version_command": "/opt/bin/ruby -v",
         "commandline": [
           "/opt/bin/ruby",
           "{}"
@@ -33,6 +37,7 @@
       },
       "ruby-2.2.2": {
         "version": "ruby 2.2.2p95 (2015-04-13 revision 50295) [x86_64-linux]",
+        "version_command": "/opt/bin/ruby -v",
         "commandline": [
           "/opt/bin/ruby",
           "{}"
@@ -40,6 +45,7 @@
       },
       "ruby-2.2.1": {
         "version": "ruby 2.2.1p85 (2015-02-26 revision 49769) [x86_64-linux]",
+        "version_command": "/opt/bin/ruby -v",
         "commandline": [
           "/opt/bin/ruby",
           "{}"
@@ -47,6 +53,7 @@
       },
       "ruby-2.2.0": {
         "version": "ruby 2.2.0p0 (2014-12-25 revision 49005) [x86_64-linux]",
+        "version_command": "/opt/bin/ruby -v",
         "commandline": [
           "/opt/bin/ruby",
           "{}"
@@ -54,6 +61,7 @@
       },
       "ruby-2.1.10": {
         "version": "ruby 2.1.10p492 (2016-04-01 revision 54464) [x86_64-linux]",
+        "version_command": "/opt/bin/ruby -v",
         "commandline": [
           "/opt/bin/ruby",
           "{}"
@@ -61,6 +69,7 @@
       },
       "ruby-2.0.0-p648": {
         "version": "ruby 2.0.0p648 (2015-12-16 revision 53162) [x86_64-linux]",
+        "version_command": "/opt/bin/ruby -v",
         "commandline": [
           "/opt/bin/ruby",
           "{}"
@@ -68,6 +77,7 @@
       },
       "ruby-1.9.3-p551": {
         "version": "ruby 1.9.3p551 (2014-11-13 revision 48407) [x86_64-linux]",
+        "version_command": "/opt/bin/ruby -v",
         "commandline": [
           "/opt/bin/ruby",
           "{}"
@@ -75,6 +85,7 @@
       },
       "ruby-1.8.7-p358": {
         "version": "ruby 1.8.7 (2012-02-08 patchlevel 358) [x86_64-linux]",
+        "version_command": "/opt/bin/ruby -v",
         "commandline": [
           "/opt/bin/ruby",
           "{}"
@@ -82,6 +93,7 @@
       },
       "ruby-1.8.6-p420": {
         "version": "ruby 1.8.6 (2010-09-02 patchlevel 420) [x86_64-linux]",
+        "version_command": "/opt/bin/ruby -v",
         "commandline": [
           "/opt/bin/ruby",
           "{}"
@@ -90,7 +102,8 @@
     },
     "php": {
       "php-7.0.3": {
-        "version": "PHP 7.0.3 (cli) (built: Mar  1 2016 00:37:44) ( NTS )",
+        "version": "PHP 7.0.3 (cli) (built: Mar  1 2016 00:37:44) ( NTS )\nCopyright (c) 1997-2016 The PHP Group\nZend Engine v3.0.0, Copyright (c) 1998-2016 Zend Technologies",
+        "version_command": "/opt/bin/php -v",
         "commandline": [
           "/opt/bin/php",
           "{}"

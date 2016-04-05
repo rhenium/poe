@@ -11,6 +11,7 @@ pub struct Compiler {
     pub id: String,
     pub lang: String,
     pub version: String,
+    pub version_command: String,
     pub commandline: Vec<String>,
 }
 
@@ -34,6 +35,8 @@ impl Compiler {
         map.insert("id".to_string(), self.id.to_json());
         map.insert("lang".to_string(), self.lang.to_json());
         map.insert("version".to_string(), self.version.to_json());
+        map.insert("version_command".to_string(), self.version_command.to_json());
+        map.insert("commandline".to_string(), self.commandline.to_json());
 
         Json::Object(map)
     }
