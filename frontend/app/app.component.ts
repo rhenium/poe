@@ -75,7 +75,7 @@ export class AppComponent {
   generateHeader() {
     const summary = this.editing.summarize();
     if (summary === "")
-      return "poe: eval in 30+ Ruby interpreters";
+      return "poe: run code in 10+ Ruby interpreters";
     else
       return summary;
   }

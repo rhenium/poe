@@ -4,8 +4,12 @@ import {Observable}     from "rxjs/Observable";
 import {EditingData} from "./editing-data.service";
 
 export class Compiler {
-  constructor(
-    public id: string) { }
+  public id: string;
+  public version: string;
+  public version_command: string;
+  public commandline: string[];
+
+  constructor() { }
 }
 
 export class Result {

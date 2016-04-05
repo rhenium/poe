@@ -9,8 +9,11 @@ import {EditingData, EditingDataService} from "./editing-data.service";
       <div class="result-item panel"
           *ngFor="#r of snippet.results.slice().reverse(); #i = index"
           [ngClass]="{'panel-success': isSuccess(r), 'panel-failure': isFailure(r), 'panel-running': isRunning(r), 'result-item-collapsed': isHiddenIdx(i)}">
-        <div class="panel-heading" (click)="toggleHiddenIdx(i)">{{r.compiler.id}} ({{r.compiler.version}}) {{r.elapsed / 1000}}ms</div>
-        <div class="panel-body container">
+        <div class="panel-heading" (click)="toggleHiddenIdx(i)" [id]="'result-'+r.compiler.id">
+          <span class="inline-left">{{r.compiler.id}}</span>
+          <span class="inline-right" *ngIf="!isRunning(r)">{{r.elapsed}}ms</span>
+        </div>
+        <div class="panel-body">
           <pre><code [innerHTML]="formatted_output(r)"></code></pre>
         </div>
       </div>
@@ -44,37 +47,42 @@ export class SnippetDetailComponent implements OnInit {
   formatted_output(r: Result): string {
     if (this.isRunning(r)) return "Running...";
     if (r._) return r._; // うーーーーーーーーーーん💩
-    let str = r.output.reduce((str, pair) => {
+
+    let str = "";
+
+    str += "<span class=\"result-info\">% " + this.escapeHTML(r.compiler.version_command) + "</span>\n";
+    str += "<span class=\"result-info\">" + this.escapeHTML(r.compiler.version) + "</span>\n";
+    // TODO: /tmp/prog どうしよ
+    str += "<span class=\"result-info\">% " + this.escapeHTML(r.compiler.commandline.join(" ").replace("{}", "/tmp/prog")) + "</span>\n";
+
+    str += r.output.reduce((str, pair) => {
       let fd = pair[0];
       let escaped = this.escapeHTML(pair[1]);
       return str + "<span class=\"result-fd-" + fd + "\">" + escaped + "</span>";
     }, "");
 
-    if (r.truncated) {
+    if (r.truncated)
       str += "<span class=\"result-info\">[truncated]</span>";
-    } else if (r.output.length === 0 || !r.output[r.output.length - 1][1].endsWith("\n")) {
+    else if (r.output.length === 0 || !r.output[r.output.length - 1][1].endsWith("\n"))
       str += "<span class=\"result-missing-newline\">%\n</span>";
-    }
 
-    if (r.result === 0) { // Success
-      if (r.exit !== 0) {
-        str += "<span class=\"result-exit\">Process exited with status " + r.exit + "</span>";
-      }
-    } else if (r.result === 1) { // Signaled
-      if (r.message.length > 0) {
-        str += "<span class=\"result-exit\">" + this.escapeHTML(r.message) + "</span>";
-      }
-    } else if (r.result === 2) {
-      str += "<span class=\"result-exit\">" + this.escapeHTML("Time limit exceeded") + "</span>";
+    switch (r.result) {
+      case 0: // Success
+        if (r.exit !== 0)
+          str += "<span class=\"result-exit\">Process exited with status " + r.exit + "</span>";
+        break;
+      case 1: // Signaled
+        if (r.message.length > 0)
+          str += "<span class=\"result-exit\">" + this.escapeHTML(r.message) + "</span>";
+        break;
+      case 2: // Timed out
+        // 5s どうしよ
+        str += "<span class=\"result-exit\">Time limit exceeded (5s)</span>";
+        break;
     }
 
     r._ = str;
     return str;
-  }
-
-  // これも
-  result_text(r: Result): string {
-    return ["Success", "Signaled", "Timed out"][r.result];
   }
 
   isSuccess(r: Result) {
@@ -107,7 +115,6 @@ export class SnippetDetailComponent implements OnInit {
   toggleHiddenIdx(i: number) {
     this.hidden_list[i] = !this.hidden_list[i];
   }
-
 
   runRemaining() {
     this.snippet.results.forEach((r, i, a) => {

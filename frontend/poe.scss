@@ -12,7 +12,7 @@ pre {
   margin: 0;
   font-size: 13px;
   line-height: 1.4;
-  border: 1px solid #cccccc;
+  /* border: 1px solid #cccccc; */
   background-color: #f5f5f5;
   overflow-x: auto;
 
@@ -63,11 +63,20 @@ pre {
 
   .panel-heading {
     padding: 10px 15px;
-    border-bottom: 1px solid;
-    border-color: inherit;
+    display: flex;
+
+    .inline-left {
+      display: inline-block;
+      flex: 1;
+    }
+
+    .inline-right {
+      display: inline-block;
+    }
   }
 
   .panel-body {
+    border-top: 1px solid inherit;
     /*padding: 15px;*/
   }
 }
@@ -153,10 +162,15 @@ pre {
         content: "▾";
       }
     }
+
+    p {
+      margin: 0.5em 0;
+    }
   }
 }
 
-.result-fd-1 { color: black; }
-.result-fd-2 { color: red; }
-.result-exit { color: orange; }
-.result-missing-newline { color: white; background-color: black; }
+.result-fd-1 { color: #000000; }
+.result-fd-2 { color: #ff0000; }
+.result-exit { color: #ffa500; }
+.result-info { color: #666666; }
+.result-missing-newline { color: #ffffff; background-color: #000000; }
