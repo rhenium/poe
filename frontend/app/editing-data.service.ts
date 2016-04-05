@@ -27,13 +27,13 @@ export class EditingData {
   }
 
   summarize() {
-    let head = this.code.substring(0, 40)
+    let head = this.code.substring(0, 50)
 
     switch (this.lang) {
       case "ruby":
-        head = head.replace(/^#+ */m, "");
+        head = head.replace(/^#+ */mg, "");
         let firstLine = head.substr(0, head.indexOf("\n")).trim();
-        if (firstLine.length >= 3)
+        if (firstLine.length > 3)
           head = firstLine;
         else
           head = head.replace("\n", "  ").replace(/\s{3,}/, "  ");
@@ -41,8 +41,8 @@ export class EditingData {
     }
 
     head = head.trim();
-    if (head.length >= 30)
-      return head.substring(0, 29) + "…";
+    if (head.length >= 40)
+      return head.substring(0, 39) + "…";
     else
       return head;
   }
@@ -60,9 +60,9 @@ export class EditingDataService {
     return this.data;
   }
 
-  reset() {
-    this.data.code = "";
-    this.data.lang = EditingData.availableLangs[0];
+  set(lang: string, code: string) {
+    this.data.lang = lang;
+    this.data.code = code;
   }
 
   fromSnippet(snip: Snippet) {
