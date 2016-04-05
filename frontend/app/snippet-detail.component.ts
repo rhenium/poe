@@ -62,9 +62,9 @@ export class SnippetDetailComponent implements OnInit {
     }, "");
 
     if (r.truncated)
-      str += "<span class=\"result-info\">[truncated]</span>";
+      str += "<span class=\"result-info\">[truncated]</span>\n";
     else if (r.output.length === 0 || !r.output[r.output.length - 1][1].endsWith("\n"))
-      str += "<span class=\"result-missing-newline\">%\n</span>";
+      str += "<span class=\"result-missing-newline\">%</span>\n";
 
     switch (r.result) {
       case 0: // Success
