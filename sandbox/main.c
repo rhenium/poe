@@ -9,13 +9,11 @@ static noreturn void finish(enum poe_exit_reason reason, int status, const char 
 	struct timespec end_timespec;
 	if (clock_gettime(CLOCK_MONOTONIC, &end_timespec))
 		bug("clock_gettime failed");
-	uint64_t elapsed =
-		(uint64_t)(end_timespec.tv_sec - start_timespec.tv_sec) * 1000 * 1000 +
-		(end_timespec.tv_nsec - start_timespec.tv_nsec) / 1000;
 
-	int xx[] = { reason, status };
-	fwrite(xx, sizeof(int), 2, stderr);
-	fwrite(&elapsed, sizeof(uint64_t), 1, stderr);
+	int elapsed = (end_timespec.tv_sec - start_timespec.tv_sec) * 1000 +
+		(end_timespec.tv_nsec - start_timespec.tv_nsec) / 1000 / 1000;
+	int xx[] = { reason, status, elapsed };
+	fwrite(xx, sizeof(int), sizeof(xx) / sizeof(int), stderr);
 	if (fmt) {
 		va_list args;
 		va_start(args, fmt);

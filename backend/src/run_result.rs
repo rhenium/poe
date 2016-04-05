@@ -13,7 +13,7 @@ use std::process::Output;
 struct RunResultMetadata {
     pub exit: i32,
     pub result: i32,
-    pub elapsed: u64,
+    pub elapsed: i32,
     pub message: String,
     pub truncated: bool,
 }
@@ -82,15 +82,15 @@ pub fn parse_and_save(snip: &Snippet, comp: &Compiler, output: Output) -> Result
     let output_limit = 65536;
 
     if output.status.success() {
-        if output.stderr.len() < 16 {
+        if output.stderr.len() < 12 {
             return Err(PoeError::from("failed sandbox (result)"));
         }
 
-        let (metavec, msgvec) = output.stderr.split_at(16);
+        let (metavec, msgvec) = output.stderr.split_at(12);
         let mut rdr = Cursor::new(metavec);
         let reason = rdr.read_i32::<LittleEndian>().unwrap();
         let exit = rdr.read_i32::<LittleEndian>().unwrap();
-        let elapsed = rdr.read_u64::<LittleEndian>().unwrap();
+        let elapsed = rdr.read_i32::<LittleEndian>().unwrap();
         let msg_str = String::from_utf8_lossy(&msgvec);
         let trunc = output.stdout.len() > output_limit;
         let meta = RunResultMetadata { exit: exit, result: reason, message: msg_str.into_owned(), truncated: trunc, elapsed: elapsed };
