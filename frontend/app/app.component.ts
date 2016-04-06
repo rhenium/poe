@@ -48,7 +48,7 @@ import {EditorComponent} from "./editor.component";
 ])
 export class AppComponent {
   private editing: EditingData;
-  private poe_description = "run code in 15+ Ruby interpreters";
+  private poe_description = "eval code in 15+ Ruby interpreters";
 
   constructor(
     private _service: SnippetService,

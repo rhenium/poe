@@ -8,10 +8,10 @@ import {EditingData, EditingDataService} from "./editing-data.service";
     <div class="result-items-container" *ngIf="snippet">
       <div class="result-item panel"
           *ngFor="#group of result_classes; #i = index"
-          [ngClass]="{'panel-success': isSuccess(group.results[0]), 'panel-failure': isFailure(group.results[0]), 'panel-running': isRunning(group.results[0])}">
+          [ngClass]="group.status_class_table">
         <div class="panel-heading" [id]="'result-type-'+i">
           <div *ngFor="#r of group.results" class="result-compiler-tab-item" (click)="group.current = r" [ngClass]="{'active': group.current === r}">
-            {{r.compiler.id}} ({{r.elapsed_ms}}ms)
+            {{r.compiler.abbrev()}} ({{r.elapsed_ms}}ms)
           </div>
         </div>
         <div class="panel-body" *ngIf="group.current">
@@ -46,7 +46,7 @@ export class SnippetDetailComponent implements OnInit {
 
   // Result に移動したいんだけどどうすればいいんだろ
   formatted_output(r: Result): string {
-    if (this.isRunning(r)) return "Running...";
+    if (r.isRunning()) return "Running...";
     if (r._) return r._; // うーーーーーーーーーーん💩
 
     let str = "";
@@ -85,26 +85,21 @@ export class SnippetDetailComponent implements OnInit {
     return str;
   }
 
-  isSuccess(r: Result) {
-    return r.result === 0 && r.exit === 0;
-  }
-
-  isFailure(r: Result) {
-    return !this.isRunning(r) && !this.isSuccess(r);
-  }
-
-  isRunning(r: Result) {
-    return r.result === null;
-  }
-
   classifyResults() {
     var classes = [];
     this.snippet.results.slice().reverse().forEach(curr => {
       const found = classes.some(group =>
-        Result.compareOutput(curr, group.results[0]) &&
-          group.results.push(curr));
+        curr.isSameResult(group.results[0]) && group.results.push(curr));
       if (!found)
-        classes.push({ current: curr, results: [curr] });
+        classes.push({
+          current: curr,
+          results: [curr],
+          status_class_table: {
+            "panel-success": curr.isSuccess(),
+            "panel-failure": curr.isFailure(),
+            "panel-running": curr.isRunning()
+          },
+        });
     });
     this.result_classes = classes;
   }
