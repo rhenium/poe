@@ -14,13 +14,11 @@ import {EditorComponent} from "./editor.component";
 @Component({
   selector: "my-app",
   template: `
-    <nav class="navbar">
+    <nav class="navbar container">
       <div class="brand">
-        <a class="navbar-brand" href="#">{{generateHeader()}}</a>
+        <a class="navbar-brand" [routerLink]="['Home']">poe</a>
+        <span class="navbar-text">{{poe_description}}</span>
       </div>
-      <!--<ul>
-        <li><a href="/">about poe</a></li>
-      </ul>-->
     </nav>
     <div class="container">
       <div id="editor" class="panel">
@@ -49,7 +47,8 @@ import {EditorComponent} from "./editor.component";
   { path: "/:sid",  name: "SnippetDetail",  component: SnippetDetailComponent },
 ])
 export class AppComponent {
-  editing: EditingData;
+  private editing: EditingData;
+  private poe_description = "run code in 15+ Ruby interpreters";
 
   constructor(
     private _service: SnippetService,
@@ -75,7 +74,7 @@ export class AppComponent {
   generateHeader() {
     const summary = this.editing.summarize();
     if (summary === "")
-      return "untitled";
+      return this.poe_description;
     else
       return summary;
   }

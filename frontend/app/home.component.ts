@@ -13,8 +13,7 @@ export class HomeComponent {
     private _routeParams: RouteParams,
     private _service: SnippetService,
     private _edit_service: EditingDataService) {
-      const msg = "# poe: eval in 10+ Ruby interpreters\n" +
-        "# paste your code here"
+      const msg = "# paste your code here";
       _edit_service.set("ruby", msg);
   }
 }
