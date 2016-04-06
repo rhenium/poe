@@ -79,6 +79,18 @@ pre {
 .panel-running, .panel-running .panel-heading { border-color: #dddddd; }
 .panel-running .panel-heading { color: #333333; background-color: #f5f5f5; }
 
+.app-loading {
+  width: 100px;
+  height: 1em;
+  text-align: center;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  margin: auto;
+  position: absolute;
+}
+
 /* EDITOR *************************************************/
 #editor {
   #editor-editor {
