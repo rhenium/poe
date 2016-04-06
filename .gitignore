@@ -1,4 +1,4 @@
 .*.sw*
 data
-ruby
+/ruby
 target

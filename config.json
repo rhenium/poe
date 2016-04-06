@@ -115,6 +115,30 @@
           "{}"
         ]
       },
+      "ruby-1.9.3-p0": {
+        "version": "ruby 1.9.3p0 (2011-10-30 revision 33570) [x86_64-linux]",
+        "version_command": "/opt/bin/ruby -v",
+        "commandline": [
+          "/opt/bin/ruby",
+          "{}"
+        ]
+      },
+      "ruby-1.9.2-p0": {
+        "version": "ruby 1.9.2p0 (2010-08-18 revision 29036) [x86_64-linux]",
+        "version_command": "/opt/bin/ruby -v",
+        "commandline": [
+          "/opt/bin/ruby",
+          "{}"
+        ]
+      },
+      "ruby-1.9.1-p0": {
+        "version": "ruby 1.9.1p0 (2009-01-30 revision 21907) [x86_64-linux]",
+        "version_command": "/opt/bin/ruby -v",
+        "commandline": [
+          "/opt/bin/ruby",
+          "{}"
+        ]
+      },
       "ruby-1.8.7-p358": {
         "version": "ruby 1.8.7 (2012-02-08 patchlevel 358) [x86_64-linux]",
         "version_command": "/opt/bin/ruby -v",
@@ -123,8 +147,72 @@
           "{}"
         ]
       },
+      "ruby-1.8.7": {
+        "version": "ruby 1.8.7 (2008-05-31 patchlevel 0) [x86_64-linux]",
+        "version_command": "/opt/bin/ruby -v",
+        "commandline": [
+          "/opt/bin/ruby",
+          "{}"
+        ]
+      },
       "ruby-1.8.6-p420": {
         "version": "ruby 1.8.6 (2010-09-02 patchlevel 420) [x86_64-linux]",
+        "version_command": "/opt/bin/ruby -v",
+        "commandline": [
+          "/opt/bin/ruby",
+          "{}"
+        ]
+      },
+      "ruby-1.8.6": {
+        "version": "ruby 1.8.6 (2007-03-13 patchlevel 0) [x86_64-linux]",
+        "version_command": "/opt/bin/ruby -v",
+        "commandline": [
+          "/opt/bin/ruby",
+          "{}"
+        ]
+      },
+      "ruby-1.8.5": {
+        "version": "ruby 1.8.5 (2006-08-25) [x86_64-linux]",
+        "version_command": "/opt/bin/ruby -v",
+        "commandline": [
+          "/opt/bin/ruby",
+          "{}"
+        ]
+      },
+      "ruby-1.8.4": {
+        "version": "ruby 1.8.4 (2005-12-24) [x86_64-linux]",
+        "version_command": "/opt/bin/ruby -v",
+        "commandline": [
+          "/opt/bin/ruby",
+          "{}"
+        ]
+      },
+      "ruby-1.8.3": {
+        "version": "ruby 1.8.3 (2005-09-21) [x86_64-linux]",
+        "version_command": "/opt/bin/ruby -v",
+        "commandline": [
+          "/opt/bin/ruby",
+          "{}"
+        ]
+      },
+      "ruby-1.8.2": {
+        "version": "ruby 1.8.2 (2004-12-25) [x86_64-linux]",
+        "version_command": "/opt/bin/ruby -v",
+        "commandline": [
+          "/opt/bin/ruby",
+          "{}"
+        ]
+      },
+      "ruby-1.8.1": {
+        "version": "ruby 1.8.1 (2003-12-25) [x86_64-linux]",
+        "version_command": "/opt/bin/ruby -v",
+        "commandline": [
+          "/opt/bin/ruby",
+          "{}"
+        ]
+      },
+      "ruby-1.8.0": {
+        "version": "ruby 1.8.0 (2003-08-04) [x86_64-linux]",
         "version_command": "/opt/bin/ruby -v",
         "commandline": [
           "/opt/bin/ruby",

@@ -1,0 +1,174 @@
+diff --git a/ext/tcltklib/tcltklib.c b/ext/tcltklib/tcltklib.c
+for Ruby 1.8.0
+--- a/ext/tcltklib/tcltklib.c
++++ b/ext/tcltklib/tcltklib.c
+@@ -533,12 +533,12 @@
+     if (Tcl_IsSafe(ptr->ip)) {
+ 	DUMP1("Tk_SafeInit");
+ 	if (Tk_SafeInit(ptr->ip) == TCL_ERROR) {
+-	    rb_raise(rb_eRuntimeError, "%s", ptr->ip->result);
++	    rb_raise(rb_eRuntimeError, "%s", Tcl_GetStringResult(ptr->ip));
+ 	}
+     } else {
+ 	DUMP1("Tk_Init");
+ 	if (Tk_Init(ptr->ip) == TCL_ERROR) {
+-	    rb_raise(rb_eRuntimeError, "%s", ptr->ip->result);
++	    rb_raise(rb_eRuntimeError, "%s", Tcl_GetStringResult(ptr->ip));
+ 	}
+     }
+ #else
+@@ -667,7 +667,7 @@
+     /* from Tcl_AppInit() */
+     DUMP1("Tcl_Init");
+     if (Tcl_Init(ptr->ip) == TCL_ERROR) {
+-	rb_raise(rb_eRuntimeError, "%s", ptr->ip->result);
++	rb_raise(rb_eRuntimeError, "%s", Tcl_GetStringResult(ptr->ip));
+     }
+ 
+     /* set variables */
+@@ -689,7 +689,7 @@
+     /* from Tcl_AppInit() */
+     DUMP1("Tk_Init");
+     if (Tk_Init(ptr->ip) == TCL_ERROR) {
+-	rb_raise(rb_eRuntimeError, "%s", ptr->ip->result);
++	rb_raise(rb_eRuntimeError, "%s", Tcl_GetStringResult(ptr->ip));
+     }
+     DUMP1("Tcl_StaticPackage(\"Tk\")");
+ #if TCL_MAJOR_VERSION >= 8
+@@ -756,7 +756,7 @@
+     struct tcltkip *ptr = get_ip(self);
+     
+     if (Tcl_MakeSafe(ptr->ip) == TCL_ERROR) {
+-	rb_raise(rb_eRuntimeError, "%s", ptr->ip->result);
++	rb_raise(rb_eRuntimeError, "%s", Tcl_GetStringResult(ptr->ip));
+     }
+ 
+     return self;
+@@ -819,13 +819,13 @@
+     DUMP2("Tcl_Eval(%s)", buf);
+     ptr->return_value = Tcl_Eval(ptr->ip, buf);
+     if (ptr->return_value == TCL_ERROR) {
+-	rb_raise(rb_eRuntimeError, "%s", ptr->ip->result);
++	rb_raise(rb_eRuntimeError, "%s", Tcl_GetStringResult(ptr->ip));
+     }
+     DUMP2("(TCL_Eval result) %d", ptr->return_value);
+ 
+     /* pass back the result (as string) */
+     /* return(rb_str_new2(ptr->ip->result)); */
+-    return(rb_tainted_str_new2(ptr->ip->result));
++    return(rb_tainted_str_new2(Tcl_GetStringResult(ptr->ip)));
+ }
+ 
+ static VALUE
+@@ -1021,12 +1021,12 @@
+     /* exception on mainloop */
+     if (ptr->return_value == TCL_ERROR) {
+ 	if (event_loop_abort_on_exc > 0 && !Tcl_InterpDeleted(ptr->ip)) {
+-	    rb_raise(rb_eRuntimeError, "%s", ptr->ip->result);
++	    rb_raise(rb_eRuntimeError, "%s", Tcl_GetStringResult(ptr->ip));
+ 	} else {
+ 	    if (event_loop_abort_on_exc < 0) {
+-		rb_warning("%s (ignore)", ptr->ip->result);
++		rb_warning("%s (ignore)", Tcl_GetStringResult(ptr->ip));
+ 	    } else {
+-		rb_warn("%s (ignore)", ptr->ip->result);
++		rb_warn("%s (ignore)", Tcl_GetStringResult(ptr->ip));
+ 	    }
+ 	    Tcl_ResetResult(ptr->ip);
+ 	    return rb_tainted_str_new2("");
+@@ -1035,7 +1035,7 @@
+ 
+     /* pass back the result (as string) */
+     /* return rb_str_new2(ptr->ip->result); */
+-    return rb_tainted_str_new2(ptr->ip->result);
++    return rb_tainted_str_new2(Tcl_GetStringResult(ptr->ip));
+ }
+ 
+ VALUE
+diff --git a/ext/tcltklib/tcltklib.c b/ext/tcltklib/tcltklib.c
+for Ruby 1.8.1
+--- a/ext/tcltklib/tcltklib.c
++++ b/ext/tcltklib/tcltklib.c
+@@ -1540,7 +1540,7 @@
+     /* from Tcl_AppInit() */
+     DUMP1("Tcl_Init");
+     if (Tcl_Init(ptr->ip) == TCL_ERROR) {
+-	rb_raise(rb_eRuntimeError, "%s", ptr->ip->result);
++	rb_raise(rb_eRuntimeError, "%s", Tcl_GetStringResult(ptr->ip));
+     }
+ 
+     /* set variables */
+@@ -1568,7 +1568,7 @@
+     if (with_tk) {
+ 	DUMP1("Tk_Init");
+ 	if (Tk_Init(ptr->ip) == TCL_ERROR) {
+-	    rb_raise(rb_eRuntimeError, "%s", ptr->ip->result);
++	    rb_raise(rb_eRuntimeError, "%s", Tcl_GetStringResult(ptr->ip));
+ 	}
+ 	DUMP1("Tcl_StaticPackage(\"Tk\")");
+ #if TCL_MAJOR_VERSION >= 8
+@@ -1681,7 +1681,7 @@
+     struct tcltkip *ptr = get_ip(self);
+     
+     if (Tcl_MakeSafe(ptr->ip) == TCL_ERROR) {
+-	rb_raise(rb_eRuntimeError, "%s", ptr->ip->result);
++	rb_raise(rb_eRuntimeError, "%s", Tcl_GetStringResult(ptr->ip));
+     }
+ 
+     return self;
+@@ -1745,13 +1745,13 @@
+     DUMP2("Tcl_Eval(%s)", buf);
+     ptr->return_value = Tcl_Eval(ptr->ip, buf);
+     if (ptr->return_value == TCL_ERROR) {
+-	rb_raise(rb_eRuntimeError, "%s", ptr->ip->result);
++	rb_raise(rb_eRuntimeError, "%s", Tcl_GetStringResult(ptr->ip));
+     }
+     DUMP2("(TCL_Eval result) %d", ptr->return_value);
+ 
+     /* pass back the result (as string) */
+     /* return(rb_str_new2(ptr->ip->result)); */
+-    return(rb_tainted_str_new2(ptr->ip->result));
++    return(rb_tainted_str_new2(Tcl_GetStringResult(ptr->ip)));
+ }
+ 
+ static VALUE
+@@ -1894,12 +1894,12 @@
+     if (Tcl_IsSafe(ptr->ip)) {
+ 	DUMP1("Tk_SafeInit");
+ 	if (Tk_SafeInit(ptr->ip) == TCL_ERROR) {
+-	    rb_raise(rb_eRuntimeError, "%s", ptr->ip->result);
++	    rb_raise(rb_eRuntimeError, "%s", Tcl_GetStringResult(ptr->ip));
+ 	}
+     } else {
+ 	DUMP1("Tk_Init");
+ 	if (Tk_Init(ptr->ip) == TCL_ERROR) {
+-	    rb_raise(rb_eRuntimeError, "%s", ptr->ip->result);
++	    rb_raise(rb_eRuntimeError, "%s", Tcl_GetStringResult(ptr->ip));
+ 	}
+     }
+ #else
+@@ -2138,12 +2138,12 @@
+     if (ptr->return_value == TCL_ERROR) {
+ 	if (event_loop_abort_on_exc > 0 && !Tcl_InterpDeleted(ptr->ip)) {
+ 	    /*rb_ip_raise(obj, rb_eRuntimeError, "%s", ptr->ip->result);*/
+-	    return create_ip_exc(obj, rb_eRuntimeError, "%s", ptr->ip->result);
++	    return create_ip_exc(obj, rb_eRuntimeError, "%s", Tcl_GetStringResult(ptr->ip));
+ 	} else {
+ 	    if (event_loop_abort_on_exc < 0) {
+-		rb_warning("%s (ignore)", ptr->ip->result);
++		rb_warning("%s (ignore)", Tcl_GetStringResult(ptr->ip));
+ 	    } else {
+-		rb_warn("%s (ignore)", ptr->ip->result);
++		rb_warn("%s (ignore)", Tcl_GetStringResult(ptr->ip));
+ 	    }
+ 	    Tcl_ResetResult(ptr->ip);
+ 	    return rb_tainted_str_new2("");
+@@ -2152,7 +2152,7 @@
+ 
+     /* pass back the result (as string) */
+     /* return rb_str_new2(ptr->ip->result); */
+-    return rb_tainted_str_new2(ptr->ip->result);
++    return rb_tainted_str_new2(Tcl_GetStringResult(ptr->ip));
+ }
+ 
+ VALUE

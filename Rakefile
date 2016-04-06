@@ -35,6 +35,17 @@ end
 
 load_config
 
+RUBY_PATCHES = {
+  ruby: {
+    /^(1.8.[01])/ => ["tcltklib-Tcl_GetStringResult"],
+    /^(1.8.[0-2])/ => ["r8532-X509_STORE_CTX-flags"],
+    /^(1.8.[0-6])/ => ["r16422-New-OpenSSL"],
+    /^(1.8|1.9.1)/ => ["r26781-OpenSSL10"],
+    /^(1.8|1.9|2.0|2.1|2.2)/ => ["r31346-r31528-SSLv2", "r51722-SSLv3"],
+    /^(1.8.7|1.9|2.[012])/ => ["r41808-EC2M"],
+  }
+}
+
 namespace :compiler do
   RUBY_MIRROR = "https://cache.ruby-lang.org/pub/ruby"
   desc "Install a ruby"
@@ -63,23 +74,13 @@ namespace :compiler do
         system("curl -o archive.tar.gz #{Shellwords.escape(url)}") or raise("failed to download")
         system("tar xf archive.tar.gz") or raise("failed to extract")
         FileUtils.chdir(archive_dir) {
-          to_be_applied = []
-          patch_ccnames = ["ruby/#{version.split("-").join("/")}", "ruby/#{version.split("-")[0]}", "ruby"]
-          patch_ccnames.each { |patch_ccname|
-            rvm_patchsets_path = File.expand_path("../vendor/rvm/patchsets/#{patch_ccname}/default", __FILE__)
-            if File.exist?(rvm_patchsets_path)
-              patches = File.read(rvm_patchsets_path).lines.map(&:chomp)
-              puts "RVM patchset found (#{patch_ccname})... #{patches.join(" ")}"
-              to_be_applied += patches
-            end
-          }
-          to_be_applied.uniq.each { |patch|
-            patch_path = patch_ccnames
-              .flat_map { |pp| ["patch", "diff"].map { |ext| File.expand_path("../vendor/rvm/patches/#{pp}/#{patch}.#{ext}", __FILE__) } }
-              .find(&File.method(:exist?))
-            puts "applying... #{patch}"
-            patch_path and system("patch -R -N -p1 --dry-run <#{patch_path} || patch -N -p1 <#{patch_path}") or
-              raise("failed to apply patch")
+          RUBY_PATCHES[:ruby].each { |regexp, patch_names|
+            next if regexp !~ version
+            patch_names.each { |name|
+              puts "applying patch #{name}..."
+              system("patch -N -p1 <#{File.expand_path("../patches/ruby/#{name}.patch", __FILE__)}") or
+                puts("patching failed: #{name}, ignoring")
+            }
           }
           retriable {
             system("./configure --prefix=#{prefix} --enable-shared --disable-install-doc") or raise("failed to configure")
