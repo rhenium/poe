@@ -7,22 +7,26 @@ import {EditingData, EditingDataService} from "./editing-data.service";
   template: `
     <div class="result-items-container" *ngIf="snippet">
       <div class="result-item panel"
-          *ngFor="#r of snippet.results.slice().reverse(); #i = index"
-          [ngClass]="{'panel-success': isSuccess(r), 'panel-failure': isFailure(r), 'panel-running': isRunning(r), 'result-item-collapsed': isHiddenIdx(i)}">
-        <div class="panel-heading" (click)="toggleHiddenIdx(i)" [id]="'result-'+r.compiler.id">
-          <span class="inline-left">{{r.compiler.id}}</span>
-          <span class="inline-right" *ngIf="!isRunning(r)">{{r.elapsed}}ms</span>
+          *ngFor="#group of result_classes; #i = index"
+          [ngClass]="{'panel-success': isSuccess(group.results[0]), 'panel-failure': isFailure(group.results[0]), 'panel-running': isRunning(group.results[0])}">
+        <div class="panel-heading" [id]="'result-type-'+i">
+          <div *ngFor="#r of group.results" class="result-compiler-tab-item" (click)="group.current = r" [ngClass]="{'active': group.current === r}">
+            {{r.compiler.id}} ({{r.elapsed}}ms)
+          </div>
         </div>
-        <div class="panel-body">
-          <pre><code [innerHTML]="formatted_output(r)"></code></pre>
+        <div class="panel-body" *ngIf="group.current">
+          <pre><code [innerHTML]="formatted_output(group.current)"></code></pre>
         </div>
       </div>
     </div>
   `,
 })
 export class SnippetDetailComponent implements OnInit {
+  /*
+          <span class="inline-right" *ngIf="!isRunning(r)">{{r.elapsed}}ms</span>
+  */
   private snippet: Snippet = null;
-  private hidden_list: boolean[] = [];
+  private result_classes: any[] = [];
 
   constructor(
     private _router: Router,
@@ -35,7 +39,7 @@ export class SnippetDetailComponent implements OnInit {
     this._service.getSnippet(sid).subscribe(
       snip => {
         this.snippet = snip;
-        this.updateHiddenList();
+        this.classifyResults();
         this._edit_service.fromSnippet(snip);
         this.runRemaining();
       },
@@ -49,7 +53,6 @@ export class SnippetDetailComponent implements OnInit {
     if (r._) return r._; // うーーーーーーーーーーん💩
 
     let str = "";
-
     str += "<span class=\"result-info\">% " + this.escapeHTML(r.compiler.version_command) + "</span>\n";
     str += "<span class=\"result-info\">" + this.escapeHTML(r.compiler.version) + "</span>\n";
     // TODO: /tmp/prog どうしよ
@@ -97,23 +100,16 @@ export class SnippetDetailComponent implements OnInit {
     return r.result === null;
   }
 
-  updateHiddenList() {
-    this.hidden_list = [];
-    let prev = null;
-    this.snippet.results.slice().reverse().forEach((curr, i) => {
-      if (prev)
-        this.hidden_list.push(Result.compareOutput(prev, curr));
-      prev = curr;
+  classifyResults() {
+    var classes = [];
+    this.snippet.results.slice().reverse().forEach(curr => {
+      const found = classes.some(group =>
+        Result.compareOutput(curr, group.results[0]) &&
+          group.results.push(curr));
+      if (!found)
+        classes.push({ current: curr, results: [curr] });
     });
-    this.hidden_list.push(false);
-  }
-
-  isHiddenIdx(i: number) {
-    return this.hidden_list[i];
-  }
-
-  toggleHiddenIdx(i: number) {
-    this.hidden_list[i] = !this.hidden_list[i];
+    this.result_classes = classes;
   }
 
   runRemaining() {
@@ -122,7 +118,7 @@ export class SnippetDetailComponent implements OnInit {
         this._service.runSnippet(this.snippet, r.compiler).subscribe(
           res => {
             a[i] = res;
-            this.updateHiddenList();
+            this.classifyResults();
           },
           err => console.log(err)
         );
