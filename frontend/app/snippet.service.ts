@@ -8,20 +8,17 @@ export class Compiler {
   public version: string;
   public version_command: string;
   public commandline: string[];
-
-  constructor() { }
 }
 
 export class Result {
-  constructor(
-    public compiler: Compiler,
-    public result: number,
-    public exit: number,
-    public elapsed: number,
-    public message: string,
-    public output: any[],
-    public _: any,
-    public truncated: boolean) { }
+  public compiler: Compiler;
+  public result: number;
+  public exit: number;
+  public elapsed: number;
+  public message: string;
+  public output: any[];
+  public _: string;
+  public truncated: boolean;
 
   public static compareOutput(a: Result, b: Result) {
     return a.result === b.result &&
@@ -34,12 +31,11 @@ export class Result {
 }
 
 export class Snippet {
-  constructor(
-    public id: string,
-    public lang: string,
-    public code: string,
-    public created: number,
-    public results: Result[]) { }
+  public id: string;
+  public lang: string;
+  public code: string;
+  public created: number;
+  public results: Result[];
 }
 
 @Injectable()

@@ -5,7 +5,7 @@ import {EditingData, EditingDataService} from "./editing-data.service";
 
 @Component({
   template: `
-    <div class="result-items-container">
+    <div class="result-items-container" *ngIf="snippet">
       <div class="result-item panel"
           *ngFor="#r of snippet.results.slice().reverse(); #i = index"
           [ngClass]="{'panel-success': isSuccess(r), 'panel-failure': isFailure(r), 'panel-running': isRunning(r), 'result-item-collapsed': isHiddenIdx(i)}">
@@ -21,8 +21,8 @@ import {EditingData, EditingDataService} from "./editing-data.service";
   `,
 })
 export class SnippetDetailComponent implements OnInit {
-  snippet = new Snippet("", "", "", -1, []);
-  hidden_list = [];
+  private snippet: Snippet = null;
+  private hidden_list: boolean[] = [];
 
   constructor(
     private _router: Router,
