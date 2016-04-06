@@ -59,6 +59,38 @@
           "{}"
         ]
       },
+      "ruby-2.1.9": {
+        "version_command": "/opt/bin/ruby -v",
+        "version": "ruby 2.1.9p490 (2016-03-30 revision 54437) [x86_64-linux]",
+        "commandline": [
+          "/opt/bin/ruby",
+          "{}"
+        ]
+      },
+      "ruby-2.1.8": {
+        "version_command": "/opt/bin/ruby -v",
+        "version": "ruby 2.1.8p440 (2015-12-16 revision 53160) [x86_64-linux]",
+        "commandline": [
+          "/opt/bin/ruby",
+          "{}"
+        ]
+      },
+      "ruby-2.1.7": {
+        "version_command": "/opt/bin/ruby -v",
+        "version": "ruby 2.1.7p400 (2015-08-18 revision 51632) [x86_64-linux]",
+        "commandline": [
+          "/opt/bin/ruby",
+          "{}"
+        ]
+      },
+      "ruby-2.1.6": {
+        "version": "ruby 2.1.6p336 (2015-04-13 revision 50298) [x86_64-linux]",
+        "version_command": "/opt/bin/ruby -v",
+        "commandline": [
+          "/opt/bin/ruby",
+          "{}"
+        ]
+      },
       "ruby-2.1.10": {
         "version": "ruby 2.1.10p492 (2016-04-01 revision 54464) [x86_64-linux]",
         "version_command": "/opt/bin/ruby -v",
