@@ -13,7 +13,7 @@ use std::process::Output;
 struct RunResultMetadata {
     pub exit: i32,
     pub result: i32,
-    pub elapsed: i32,
+    pub elapsed_ms: i32,
     pub message: String,
     pub truncated: bool,
 }
@@ -29,7 +29,7 @@ pub fn open_render(snip: &Snippet, comp: &Compiler) -> Json {
             let meta: RunResultMetadata = json::decode(&encoded).unwrap();
             map.insert("exit".to_string(), meta.exit.to_json());
             map.insert("result".to_string(), meta.result.to_json());
-            map.insert("elapsed".to_string(), meta.elapsed.to_json());
+            map.insert("elapsed_ms".to_string(), meta.elapsed_ms.to_json());
             map.insert("message".to_string(), meta.message.to_json());
             map.insert("truncated".to_string(), meta.truncated.to_json());
             map.insert("output".to_string(), read_output_str(&snip, &comp).to_json());
@@ -90,10 +90,10 @@ pub fn parse_and_save(snip: &Snippet, comp: &Compiler, output: Output) -> Result
         let mut rdr = Cursor::new(metavec);
         let reason = rdr.read_i32::<LittleEndian>().unwrap();
         let exit = rdr.read_i32::<LittleEndian>().unwrap();
-        let elapsed = rdr.read_i32::<LittleEndian>().unwrap();
+        let elapsed_ms = rdr.read_i32::<LittleEndian>().unwrap();
         let msg_str = String::from_utf8_lossy(&msgvec);
         let trunc = output.stdout.len() > output_limit;
-        let meta = RunResultMetadata { exit: exit, result: reason, message: msg_str.into_owned(), truncated: trunc, elapsed: elapsed };
+        let meta = RunResultMetadata { exit: exit, result: reason, message: msg_str.into_owned(), truncated: trunc, elapsed_ms: elapsed_ms };
 
         let mut meta_file = fs::File::create(format!("{}/results/{}.json", &snip.basedir(), &comp.id))?;
         meta_file.write(json::encode(&meta).unwrap().as_bytes())?;

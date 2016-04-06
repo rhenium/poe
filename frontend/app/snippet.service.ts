@@ -14,7 +14,7 @@ export class Result {
   public compiler: Compiler;
   public result: number;
   public exit: number;
-  public elapsed: number;
+  public elapsed_ms: number;
   public message: string;
   public output: any[];
   public _: string;

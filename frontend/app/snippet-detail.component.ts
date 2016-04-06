@@ -11,7 +11,7 @@ import {EditingData, EditingDataService} from "./editing-data.service";
           [ngClass]="{'panel-success': isSuccess(group.results[0]), 'panel-failure': isFailure(group.results[0]), 'panel-running': isRunning(group.results[0])}">
         <div class="panel-heading" [id]="'result-type-'+i">
           <div *ngFor="#r of group.results" class="result-compiler-tab-item" (click)="group.current = r" [ngClass]="{'active': group.current === r}">
-            {{r.compiler.id}} ({{r.elapsed}}ms)
+            {{r.compiler.id}} ({{r.elapsed_ms}}ms)
           </div>
         </div>
         <div class="panel-body" *ngIf="group.current">
@@ -22,9 +22,6 @@ import {EditingData, EditingDataService} from "./editing-data.service";
   `,
 })
 export class SnippetDetailComponent implements OnInit {
-  /*
-          <span class="inline-right" *ngIf="!isRunning(r)">{{r.elapsed}}ms</span>
-  */
   private snippet: Snippet = null;
   private result_classes: any[] = [];
 
