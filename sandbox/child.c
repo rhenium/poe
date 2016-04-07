@@ -56,7 +56,7 @@ noreturn void poe_child_do(struct playground *pg,
 		bug("dup2/close stderr failed");
 
 	char *const env[] = {
-		"PATH=/opt/bin:/usr/bin",
+		"PATH=/usr/bin",
 		"USER=" POE_USERNAME,
 		"LOGNAME=" POE_USERNAME,
 		"HOME=/tmp",

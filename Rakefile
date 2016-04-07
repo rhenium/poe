@@ -67,7 +67,7 @@ namespace :compiler do
 
     destdir = $datadir + "/env/ruby/#{id}"
     raise ArgumentError, "already installed?" if Dir.exist?(destdir.to_s)
-    prefix = "/opt"
+    prefix = "/usr"
 
     Dir.mktmpdir { |tmpdir|
       FileUtils.chdir(tmpdir) {
@@ -111,7 +111,7 @@ namespace :compiler do
 
     destdir = $datadir + "/env/php/#{id}"
     raise ArgumentError, "already installed?" if Dir.exist?(destdir.to_s)
-    prefix = "/opt"
+    prefix = "/usr"
 
     Dir.mktmpdir { |tmpdir|
       FileUtils.chdir(tmpdir) {
