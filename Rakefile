@@ -33,17 +33,43 @@ rescue
   retry
 end
 
+def download(url, target)
+  FileUtils.mkdir_p($datadir + "/cache")
+  out = $datadir + "/cache/" + File.basename(url)
+  system("curl -z #{Shellwords.escape(out)} -o #{Shellwords.escape(out)} -L #{Shellwords.escape(url)}") or
+    raise("failed download: #{url}")
+  FileUtils.copy(out, target)
+end
+
 load_config
 
 RUBY_PATCHES = {
-  ruby: {
-    /^(1.8.[01])/ => ["tcltklib-Tcl_GetStringResult"],
-    /^(1.8.[0-2])/ => ["r8532-X509_STORE_CTX-flags"],
-    /^(1.8.[0-6])/ => ["r16422-New-OpenSSL"],
-    /^(1.8|1.9.1)/ => ["r26781-OpenSSL10"],
-    /^(1.8|1.9|2.0|2.1|2.2)/ => ["r31346-r31528-SSLv2", "r51722-SSLv3"],
-    /^(1.8.7|1.9|2.[012])/ => ["r41808-EC2M"],
-  }
+  ruby: [
+    # core
+    [/^(1.6.[5-8])/,            "eval-64bit-fix-165", "disable-tcltklib-165"],
+
+    # ext/tcltklib (old)
+    [/^1.8.[01]/,               "disable-tcltklib-180"],
+
+    # ext/openssl
+    [/^1.8.2/,                  "r8532-X509_STORE_CTX-flags"],
+    [/^1.8.0/,                  "r16422-New-OpenSSL-180"],
+    [/^1.8.1/,                  "r16422-New-OpenSSL-181"],
+    [/^(1.8.[2-6]|1.9.0)/,      "r16422-New-OpenSSL-182"],
+    [/^1.9.0/,                  "r16478-pkcs5-typo"],
+    # OpenSSL 1.0 support
+    [/^1.8.0/,                  "r26781-OpenSSL10-180"],
+    [/^(1.8.[1-7]|1.9.[01])/,   "r26781-OpenSSL10-181"],
+    # apply SSLv2, then apply SSLv3
+    [/^1.8.0/,                  "r31346-r31528-SSLv2-180", "r51722-SSLv3-180"],
+    [/^1.8.1/,                  "r31346-r31528-SSLv2-181", "r51722-SSLv3-181"],
+    [/^1.8.2/,                  "r31346-r31528-SSLv2-182", "r51722-SSLv3-181"],
+    [/^(1.8.[3-7]|1.9.[01])/,   "r31346-r31528-SSLv2-183", "r51722-SSLv3-181"],
+    [/^1.9.[23]/,               "r31346-r31528-SSLv2-192", "r51722-SSLv3-192"],
+    [/^2.[012]/,                "r51722-SSLv3-200"],
+    # EC2M
+    [/^(1.8.7|1.9|2.[012])/,    "r41808-EC2M"],
+  ]
 }
 
 namespace :compiler do
@@ -71,19 +97,23 @@ namespace :compiler do
 
     Dir.mktmpdir { |tmpdir|
       FileUtils.chdir(tmpdir) {
-        system("curl -o archive.tar.gz #{Shellwords.escape(url)}") or raise("failed to download")
+        download(url, "archive.tar.gz")
         system("tar xf archive.tar.gz") or raise("failed to extract")
         FileUtils.chdir(archive_dir) {
-          RUBY_PATCHES[:ruby].each { |regexp, patch_names|
+          RUBY_PATCHES[:ruby].each { |regexp, *patch_names|
             next if regexp !~ version
             patch_names.each { |name|
               puts "applying patch #{name}..."
-              system("patch -N -p1 <#{File.expand_path("../patches/ruby/#{name}.patch", __FILE__)}") or
-                puts("patching failed: #{name}, ignoring")
+              patch_file = File.expand_path("../patches/ruby/#{name}.patch", __FILE__)
+              retriable {
+                system("patch --dry-run -R -N -p1 <#{patch_file}") or
+                  system("patch -N -p1 <#{patch_file}") or
+                    raise("patch failed: #{name}")
+              }
             }
           }
           retriable {
-            system("./configure --prefix=#{prefix} --enable-shared --disable-install-doc") or raise("failed to configure")
+            system("./configure --prefix=#{prefix} --enable-shared --disable-install-doc --without-tk --without-tcllib --without-tklib") or raise("failed to configure")
             system("make -j6") or raise("failed to make")
             system("make install DESTDIR=#{destdir}") or raise("failed to install")
           }

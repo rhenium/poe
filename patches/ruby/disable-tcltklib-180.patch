@@ -1,0 +1,11 @@
++++ a/ext/tcltklib/extconf.rb	2016-04-07 22:16:29.834363113 +0900
+--- b/ext/tcltklib/extconf.rb	2016-04-07 22:16:46.291204334 +0900
+@@ -2,6 +2,8 @@
+ 
+ require 'mkmf'
+ 
++exit
++
+ if RUBY_PLATFORM !~ /mswin32|mingw|cygwin|bccwin32/
+   have_library("nsl", "t_open")
+   have_library("socket", "socket")

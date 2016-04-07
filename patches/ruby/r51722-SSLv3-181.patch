@@ -1,5 +1,5 @@
 diff --git a/ext/openssl/extconf.rb b/ext/openssl/extconf.rb
-index 8c04cb5..132d803 100644
+for Ruby 1.8.0 to 1.9.1
 --- a/ext/openssl/extconf.rb
 +++ b/ext/openssl/extconf.rb
 @@ -104,6 +104,9 @@
@@ -12,34 +12,6 @@ index 8c04cb5..132d803 100644
  if try_compile("#define FOO(a, ...) foo(a, ##__VA_ARGS__)\n int x(){FOO(1);FOO(1,2);FOO(1,2,3);}\n")
    $defs.push("-DHAVE_VA_ARGS_MACRO")
  end
-diff --git a/ext/openssl/extconf.rb b/ext/openssl/extconf.rb
-index 8c04cb5..132d803 100644
---- a/ext/openssl/extconf.rb
-+++ b/ext/openssl/extconf.rb
-@@ -104,6 +104,9 @@
- have_func("SSLv2_method")
- have_func("SSLv2_server_method")
- have_func("SSLv2_client_method")
-+have_func("SSLv3_method")
-+have_func("SSLv3_server_method")
-+have_func("SSLv3_client_method")
- unless have_func("SSL_set_tlsext_host_name", ['openssl/ssl.h'])
- 	have_macro("SSL_set_tlsext_host_name", ['openssl/ssl.h']) && $defs.push("-DHAVE_SSL_SET_TLSEXT_HOST_NAME")
- end
-diff --git a/ext/openssl/extconf.rb b/ext/openssl/extconf.rb
-index 8c04cb5..132d803 100644
---- a/ext/openssl/extconf.rb
-+++ b/ext/openssl/extconf.rb
-@@ -104,6 +104,9 @@
- have_func("SSLv2_method")
- have_func("SSLv2_server_method")
- have_func("SSLv2_client_method")
-+have_func("SSLv3_method")
-+have_func("SSLv3_server_method")
-+have_func("SSLv3_client_method")
- have_func("TLSv1_1_method")
- have_func("TLSv1_1_server_method")
- have_func("TLSv1_1_client_method")
 diff --git a/ext/openssl/ossl_ssl.c b/ext/openssl/ossl_ssl.c
 index f7cb7f0..47111f6 100644
 --- a/ext/openssl/ossl_ssl.c

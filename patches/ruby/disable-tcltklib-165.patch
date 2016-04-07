@@ -1,0 +1,11 @@
+diff --git a/ext/tcltklib/extconf.rb b/ext/tcltklib/extconf.rb
+index f732c16..fab2029 100644
+--- a/ext/tcltklib/extconf.rb
++++ b/ext/tcltklib/extconf.rb
+@@ -68,5 +68,5 @@ if have_header("tcl.h") && have_header("tk.h") &&
+     find_tk(tklib, stubs)
+   $CPPFLAGS += ' -DUSE_TCL_STUBS -DUSE_TK_STUBS' if stubs
+   $CPPFLAGS += ' -D_WIN32' if /cygwin/ =~ RUBY_PLATFORM
+-  create_makefile("tcltklib")
++  create_makefile("tcltklib") if false
+ end
