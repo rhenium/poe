@@ -35,7 +35,7 @@ noreturn void poe_child_do(struct playground *pg,
 	if (!pw)
 		bug("getpwnam() failed");
 
-	checked_syscall(chdir("/tmp"));
+	checked_syscall(chdir(pw->pw_dir));
 	checked_syscall(setsid());
 	gid_t grps[] = { POE_GID };
 	checked_syscall(setgroups(1, grps)); // set supplementary group IDs
