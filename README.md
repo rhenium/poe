@@ -39,7 +39,8 @@ frontend (TypeScript):
 
 % pushd /path/to/data
 % mkdir -p env/base
-% sudo pacstrap -cd env/base base libxml2
+% sudo pacstrap -cd env/base filesystem bash openssl coreutils shadow libxml2
+% sudo arch-chroot env/base useradd -m unaypoe -u 27627 # home directory is needed
 % popd
 
 % rake 'ruby[2.3.0]' # will add to config.json
