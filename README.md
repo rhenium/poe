@@ -36,12 +36,10 @@ frontend (TypeScript):
 % cd ..
 
 % nvim config.json
+% mkdir -p /path/to/datadir/{env/base,snippets}
 
-% pushd /path/to/data
-% mkdir -p env/base
-% sudo pacstrap -cd env/base filesystem bash openssl coreutils shadow libxml2
-% sudo arch-chroot env/base useradd -m unaypoe -u 27627 # home directory is needed
-% popd
+% sudo pacstrap -cd /path/to/datadir/env/base filesystem bash openssl coreutils shadow libxml2
+% sudo arch-chroot /path/to/datadir/env/base useradd -m unyapoe -u 27627 # home directory is needed
 
 % rake 'ruby[2.3.0]' # will add to config.json
 % rake 'php[7.0.0]'
