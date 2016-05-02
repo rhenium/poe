@@ -51,7 +51,7 @@ export class SnippetDetailComponent implements OnInit {
 
     let str = "";
     str += "<span class=\"result-info\">% " + this.escapeHTML(r.compiler.version_command) + "</span>\n";
-    str += "<span class=\"result-info\">" + this.escapeHTML(r.compiler.version) + "</span>\n";
+    str += "<span class=\"result-info\">" + this.escapeHTML(r.compiler.version) + "</span>"; // compiler.version は末尾に改行を含んでいるはず
     // TODO: /tmp/prog どうしよ
     str += "<span class=\"result-info\">% " + this.escapeHTML(r.compiler.commandline.join(" ").replace("{}", "/tmp/prog")) + "</span>\n";
 
