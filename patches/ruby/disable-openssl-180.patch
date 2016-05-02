@@ -1,0 +1,11 @@
+--- a/ext/openssl/extconf.rb	2016-05-03 01:48:25.147432731 +0900
++++ b/ext/openssl/extconf.rb	2016-05-03 01:49:44.075075351 +0900
+@@ -90,7 +90,7 @@
+ 
+ message "=== Checking done. ===\n"
+ $distcleanfiles << "GNUmakefile" << "dep"
+-create_makefile("openssl")
++create_makefile("openssl") if false
+ if /gcc/ =~ CONFIG["CC"]
+   File.open("GNUmakefile", "w") {|f|
+     f.print <<EOD

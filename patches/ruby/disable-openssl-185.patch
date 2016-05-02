@@ -1,0 +1,9 @@
+--- a/ext/openssl/extconf.rb	2016-05-03 00:20:27.987380850 +0900
++++ b/ext/openssl/extconf.rb	2016-05-03 00:28:01.192415788 +0900
+@@ -137,5 +137,5 @@
+ message "=== Checking done. ===\n"
+ 
+ create_header
+-create_makefile("openssl")
++create_makefile("openssl") if false
+ message "Done.\n"

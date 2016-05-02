@@ -46,29 +46,26 @@ load_config
 RUBY_PATCHES = {
   ruby: [
     # core
-    [/^(1.6.[5-8])/,            "eval-64bit-fix-165", "disable-tcltklib-165"],
+    [/^(1.6.[5-8])/,            "eval-64bit-fix-165"],
 
-    # ext/tcltklib (old)
+    # ext/tcltklib
+    [/^1.6.[5-8]/,              "disable-tcltklib-165"],
     [/^1.8.[01]/,               "disable-tcltklib-180"],
 
     # ext/openssl
-    [/^1.8.2/,                  "r8532-X509_STORE_CTX-flags"],
-    [/^1.8.0/,                  "r16422-New-OpenSSL-180"],
-    [/^1.8.1/,                  "r16422-New-OpenSSL-181"],
-    [/^(1.8.[2-6]|1.9.0)/,      "r16422-New-OpenSSL-182"],
+    [/^1.8.[0-2]/,              "disable-openssl-180"],
+    [/^1.8.[3-4]/,              "disable-openssl-183"],
+    [/^1.8.[5-7]/,              "disable-openssl-185"],
+    [/^1.9.0/,                  "r16422-New-OpenSSL-182"],
     [/^1.9.0/,                  "r16478-pkcs5-typo"],
     # OpenSSL 1.0 support
-    [/^1.8.0/,                  "r26781-OpenSSL10-180"],
-    [/^(1.8.[1-7]|1.9.[01])/,   "r26781-OpenSSL10-181"],
+    [/^1.9.[01]/,               "r26781-OpenSSL10-181"],
     # apply SSLv2, then apply SSLv3
-    [/^1.8.0/,                  "r31346-r31528-SSLv2-180", "r51722-SSLv3-180"],
-    [/^1.8.1/,                  "r31346-r31528-SSLv2-181", "r51722-SSLv3-181"],
-    [/^1.8.2/,                  "r31346-r31528-SSLv2-182", "r51722-SSLv3-181"],
-    [/^(1.8.[3-7]|1.9.[01])/,   "r31346-r31528-SSLv2-183", "r51722-SSLv3-181"],
+    [/^1.9.[01]/,               "r31346-r31528-SSLv2-183", "r51722-SSLv3-181"],
     [/^1.9.[23]/,               "r31346-r31528-SSLv2-192", "r51722-SSLv3-192"],
     [/^2.[012]/,                "r51722-SSLv3-200"],
     # EC2M
-    [/^(1.8.7|1.9|2.[012])/,    "r41808-EC2M"],
+    [/^(1.9|2.[012])/,          "r41808-EC2M"],
   ]
 }
 

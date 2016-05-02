@@ -1,0 +1,9 @@
+--- a/ext/openssl/extconf.rb	2016-05-03 02:00:22.936142847 +0900
++++ b/ext/openssl/extconf.rb	2016-05-03 02:00:50.509805908 +0900
+@@ -114,5 +114,5 @@
+ have_struct_member("X509_ATTRIBUTE", "single", "openssl/x509.h")
+ 
+ message "=== Checking done. ===\n"
+-create_makefile("openssl")
++create_makefile("openssl") if false
+ message "Done.\n"
