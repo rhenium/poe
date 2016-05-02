@@ -116,7 +116,7 @@ namespace :compiler do
           }
 
           add_compiler("ruby", id, {
-            version: `LD_LIBRARY_PATH=#{destdir}#{prefix}/lib #{destdir}#{prefix}/bin/ruby -v`.lines.first.chomp,
+            version: `LD_LIBRARY_PATH=#{destdir}#{prefix}/lib #{destdir}#{prefix}/bin/ruby -v`,
             version_command: "#{prefix}/bin/ruby -v",
             commandline: ["#{prefix}/bin/ruby", "{}"]
           })
@@ -125,16 +125,12 @@ namespace :compiler do
     }
   end
 
-  PHPS = {
-    "7.0.3" => "http://jp2.php.net/distributions/php-7.0.3.tar.gz",
-    "5.6.17" => "http://jp2.php.net/distributions/php-5.6.17.tar.gz",
-  }
+  PHP_MIRROR = "http://jp2.php.net/distributions"
   desc "Install a php"
   task :php, [:version] do |t, args|
     version = args[:version]
-    id = "ruby-#{version}"
-    url = PHPS[version] or raise(ArgumentError, "unknown php")
-    name = url.split("/").last
+    id = "php-#{version}"
+    url = "#{PHP_MIRROR}/#{id}.tar.gz"
 
     destdir = $datadir + "/env/php/#{id}"
     raise ArgumentError, "already installed?" if Dir.exist?(destdir.to_s)
@@ -142,17 +138,17 @@ namespace :compiler do
 
     Dir.mktmpdir { |tmpdir|
       FileUtils.chdir(tmpdir) {
-        system("curl -O #{Shellwords.escape(url)}") or raise("failed to download")
-        system("tar xf #{Shellwords.escape(name)}") or raise("failed to extract")
-        FileUtils.chdir(name.split(".tar.gz").first) {
+        download(url, "archive.tar.gz")
+        system("tar xf archive.tar.gz") or raise("failed to extract")
+        FileUtils.chdir(id) {
           retriable {
             system("./configure --prefix=#{prefix} --enable-shared") or raise("failed to configure")
             system("make -j6") or raise("failed to make")
-            system("make install INSTALL_ROOT=#{destdir.to_s}") or raise("failed to install")
+            system("make install INSTALL_ROOT=#{destdir}") or raise("failed to install")
           }
 
           add_compiler("php", id, {
-            version: `LD_LIBRARY_PATH=#{destdir}#{prefix}/lib #{destdir}#{prefix}/bin/php -v`.lines.first.chomp,
+            version: `LD_LIBRARY_PATH=#{destdir}#{prefix}/lib #{destdir}#{prefix}/bin/php -v`,
             version_command: "#{prefix}/bin/php -v",
             commandline: ["#{prefix}/bin/php", "{}"]
           })

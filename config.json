@@ -3,16 +3,24 @@
   "runner": "/work/poe/sandbox/runner",
   "compilers": {
     "ruby": {
-      "ruby-2.3.0": {
-        "version": "ruby 2.3.0p0 (2015-12-25 revision 53290) [x86_64-linux]",
+      "ruby-2.3.1": {
+        "version": "ruby 2.3.1p112 (2016-04-26 revision 54768) [x86_64-linux]\n",
         "version_command": "/usr/bin/ruby -v",
         "commandline": [
           "/usr/bin/ruby",
           "{}"
         ]
       },
-      "ruby-2.2.4": {
-        "version": "ruby 2.2.4p230 (2015-12-16 revision 53155) [x86_64-linux]",
+      "ruby-2.3.0": {
+        "version": "ruby 2.3.1p112 (2016-04-26 revision 54768) [x86_64-linux]\n",
+        "version_command": "/usr/bin/ruby -v",
+        "commandline": [
+          "/usr/bin/ruby",
+          "{}"
+        ]
+      },
+      "ruby-2.2.5": {
+        "version": "ruby 2.2.5p319 (2016-04-26 revision 54774) [x86_64-linux]\n",
         "version_command": "/usr/bin/ruby -v",
         "commandline": [
           "/usr/bin/ruby",
@@ -20,7 +28,7 @@
         ]
       },
       "ruby-2.1.10": {
-        "version": "ruby 2.1.10p492 (2016-04-01 revision 54464) [x86_64-linux]",
+        "version": "ruby 2.1.10p492 (2016-04-01 revision 54464) [x86_64-linux]\n",
         "version_command": "/usr/bin/ruby -v",
         "commandline": [
           "/usr/bin/ruby",
@@ -28,111 +36,23 @@
         ]
       },
       "ruby-2.0.0-p648": {
-        "version": "ruby 2.0.0p648 (2015-12-16 revision 53162) [x86_64-linux]",
+        "version": "ruby 2.0.0p648 (2015-12-16 revision 53162) [x86_64-linux]\n",
         "version_command": "/usr/bin/ruby -v",
         "commandline": [
           "/usr/bin/ruby",
           "{}"
         ]
       },
-      "ruby-2.0.0-p0": {
-        "version": "ruby 2.0.0p0 (2013-02-24 revision 39474) [x86_64-linux]",
+      "ruby-1.8.7-p374": {
+        "version": "ruby 1.8.7 (2013-06-27 patchlevel 374) [x86_64-linux]\n",
         "version_command": "/usr/bin/ruby -v",
         "commandline": [
           "/usr/bin/ruby",
           "{}"
         ]
       },
-      "ruby-1.9.3-p0": {
-        "version": "ruby 1.9.3p0 (2011-10-30 revision 33570) [x86_64-linux]",
-        "version_command": "/usr/bin/ruby -v",
-        "commandline": [
-          "/usr/bin/ruby",
-          "{}"
-        ]
-      },
-      "ruby-1.9.2-p0": {
-        "version": "ruby 1.9.2p0 (2010-08-18 revision 29036) [x86_64-linux]",
-        "version_command": "/usr/bin/ruby -v",
-        "commandline": [
-          "/usr/bin/ruby",
-          "{}"
-        ]
-      },
-      "ruby-1.9.1-p0": {
-        "version": "ruby 1.9.1p0 (2009-01-30 revision 21907) [x86_64-linux]",
-        "version_command": "/usr/bin/ruby -v",
-        "commandline": [
-          "/usr/bin/ruby",
-          "{}"
-        ]
-      },
-      "ruby-1.9.0-0": {
-        "version": "ruby 1.9.0 (2007-12-25 revision 14709) [x86_64-linux]",
-        "version_command": "/usr/bin/ruby -v",
-        "commandline": [
-          "/usr/bin/ruby",
-          "{}"
-        ]
-      },
-      "ruby-1.8.7": {
-        "version": "ruby 1.8.7 (2008-05-31 patchlevel 0) [x86_64-linux]",
-        "version_command": "/usr/bin/ruby -v",
-        "commandline": [
-          "/usr/bin/ruby",
-          "{}"
-        ]
-      },
-      "ruby-1.8.6": {
-        "version": "ruby 1.8.6 (2007-03-13 patchlevel 0) [x86_64-linux]",
-        "version_command": "/usr/bin/ruby -v",
-        "commandline": [
-          "/usr/bin/ruby",
-          "{}"
-        ]
-      },
-      "ruby-1.8.5": {
-        "version": "ruby 1.8.5 (2006-08-25) [x86_64-linux]",
-        "version_command": "/usr/bin/ruby -v",
-        "commandline": [
-          "/usr/bin/ruby",
-          "{}"
-        ]
-      },
-      "ruby-1.8.4": {
-        "version": "ruby 1.8.4 (2005-12-24) [x86_64-linux]",
-        "version_command": "/usr/bin/ruby -v",
-        "commandline": [
-          "/usr/bin/ruby",
-          "{}"
-        ]
-      },
-      "ruby-1.8.3": {
-        "version": "ruby 1.8.3 (2005-09-21) [x86_64-linux]",
-        "version_command": "/usr/bin/ruby -v",
-        "commandline": [
-          "/usr/bin/ruby",
-          "{}"
-        ]
-      },
-      "ruby-1.8.2": {
-        "version": "ruby 1.8.2 (2004-12-25) [x86_64-linux]",
-        "version_command": "/usr/bin/ruby -v",
-        "commandline": [
-          "/usr/bin/ruby",
-          "{}"
-        ]
-      },
-      "ruby-1.8.1": {
-        "version": "ruby 1.8.1 (2003-12-25) [x86_64-linux]",
-        "version_command": "/usr/bin/ruby -v",
-        "commandline": [
-          "/usr/bin/ruby",
-          "{}"
-        ]
-      },
-      "ruby-1.8.0": {
-        "version": "ruby 1.8.0 (2003-08-04) [x86_64-linux]",
+      "ruby-1.8.6-p420": {
+        "version": "ruby 1.8.6 (2010-09-02 patchlevel 420) [x86_64-linux]\n",
         "version_command": "/usr/bin/ruby -v",
         "commandline": [
           "/usr/bin/ruby",
@@ -140,15 +60,7 @@
         ]
       },
       "ruby-1.6.8": {
-        "version": "ruby 1.6.8 (2002-12-24) [x86_64-linux]",
-        "version_command": "/usr/bin/ruby -v",
-        "commandline": [
-          "/usr/bin/ruby",
-          "{}"
-        ]
-      },
-      "ruby-1.6.5": {
-        "version": "ruby 1.6.5 (2001-09-19) [x86_64-linux]",
+        "version": "ruby 1.6.8 (2002-12-24) [x86_64-linux]\n",
         "version_command": "/usr/bin/ruby -v",
         "commandline": [
           "/usr/bin/ruby",
@@ -157,6 +69,30 @@
       }
     },
     "php": {
+      "php-7.0.6": {
+        "version": "PHP 7.0.6 (cli) (built: Jan  1 1970 00:00:00) ( NTS )\nCopyright (c) 1997-2016 The PHP Group\nZend Engine v3.0.0, Copyright (c) 1998-2016 Zend Technologies\n",
+        "version_command": "/usr/bin/php -v",
+        "commandline": [
+          "/usr/bin/php",
+          "{}"
+        ]
+      },
+      "php-5.6.21": {
+        "version": "PHP 5.6.21 (cli) (built: Jan  1 1970 00:00:00) \nCopyright (c) 1997-2016 The PHP Group\nZend Engine v2.6.0, Copyright (c) 1998-2016 Zend Technologies\n",
+        "version_command": "/usr/bin/php -v",
+        "commandline": [
+          "/usr/bin/php",
+          "{}"
+        ]
+      },
+      "php-5.5.35": {
+        "version": "PHP 5.5.35 (cli) (built: Jan  1 1970 00:00:00) \nCopyright (c) 1997-2015 The PHP Group\nZend Engine v2.5.0, Copyright (c) 1998-2015 Zend Technologies\n",
+        "version_command": "/usr/bin/php -v",
+        "commandline": [
+          "/usr/bin/php",
+          "{}"
+        ]
+      }
     }
   }
 }
