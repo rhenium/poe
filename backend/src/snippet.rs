@@ -31,22 +31,22 @@ impl Snippet {
         let snip_meta = SnippetMetadata { lang: lang.to_string(), created: created };
         let snip = Snippet { id: id, metadata: snip_meta };
 
-        fs::create_dir(snip.basedir())?;
-        fs::create_dir(snip.basedir() + "/results")?;
-        let mut metafile = fs::File::create(snip.basedir() + "/metadata.json")?;
-        metafile.write(json::encode(&snip.metadata).unwrap().as_bytes())?;
-        let mut codefile = fs::File::create(snip.code_file())?;
-        codefile.write(code.as_bytes())?;
+        try!(fs::create_dir(snip.basedir()));
+        try!(fs::create_dir(snip.basedir() + "/results"));
+        let mut metafile = try!(fs::File::create(snip.basedir() + "/metadata.json"));
+        try!(metafile.write(json::encode(&snip.metadata).unwrap().as_bytes()));
+        let mut codefile = try!(fs::File::create(snip.code_file()));
+        try!(codefile.write(code.as_bytes()));
 
         Ok(snip)
     }
 
     pub fn find(id: &str) -> Result<Snippet, PoeError> {
         let metafile_path = config::datadir() + "/snippets/" + &id + "/metadata.json";
-        let mut metafile = fs::File::open(metafile_path)?;
+        let mut metafile = try!(fs::File::open(metafile_path));
         let mut encoded = String::new();
-        metafile.read_to_string(&mut encoded)?;
-        Ok(Snippet { id: id.to_string(), metadata: json::decode(&encoded)? })
+        try!(metafile.read_to_string(&mut encoded));
+        Ok(Snippet { id: id.to_string(), metadata: try!(json::decode(&encoded)) })
     }
 
     pub fn code_file(&self) -> String {

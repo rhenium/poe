@@ -17,12 +17,12 @@ pub struct Compiler {
 
 impl Compiler {
     pub fn run(&self, snippet: &Snippet) -> Result<(), PoeError> {
-        let output = Command::new(config::runner())
+        let output = try!(Command::new(config::runner())
                           .arg(config::basedir())
                           .arg(self.overlay_path())
                           .arg(snippet.code_file())
                           .args(&self.commandline)
-                          .output()?;
+                          .output());
         run_result::parse_and_save(&snippet, &self, output)
     }
 

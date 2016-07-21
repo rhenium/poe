@@ -55,7 +55,7 @@ pub fn parse_post(orig: &str) -> Result<HashMap<String, String>, RequestError> {
                 Err(RequestError::BadRequest.into())
             }
         }).collect();
-    Ok(HashMap::from_iter(vals?))
+    Ok(HashMap::from_iter(try!(vals)))
 }
 
 pub fn uuid() -> String {
